@@ -32,4 +32,6 @@ set_target_properties(gtest PROPERTIES IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/
 include_directories("${GOOGLETEST_PATH}/include/")
 include_directories("${CMAKE_SOURCE_DIR}/../include/")
 
+# 3rd chunk?!
+
 add_subdirectory(alphabet)
