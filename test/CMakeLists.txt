@@ -23,8 +23,6 @@ add_library (gtest_main STATIC IMPORTED)
 add_dependencies(gtest_main googletest)
 set_target_properties(gtest_main PROPERTIES IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/lib/libgtest_main.a")
 
-# 2nd junk?!
-
 add_library (gtest STATIC IMPORTED)
 add_dependencies(gtest gtest_main)
 set_target_properties(gtest PROPERTIES IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/lib/libgtest.a")
