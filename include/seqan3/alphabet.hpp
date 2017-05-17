@@ -31,64 +31,22 @@
 // DAMAGE.
 //
 // ============================================================================
-// Author: Sara Hetzel <sara.hetzel AT fu-berlin.de>
-// ============================================================================
+
+/*!\file alphabet.hpp
+ * \ingroup alphabet
+ * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
+ * \brief Meta-header for the alphabet module.
+ *
+ * \defgroup alphabet
+ *
+ * The alphabet module contains different biological alphabets and related functionality.
+ *
+ * TODO more details.
+ */
 
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "../alphabet.hpp"
-#include "../alphabet_container.hpp"
-#include "nucl16.hpp"
-
-// ------------------------------------------------------------------
-// containers
-// -----------------------------------------------------------------
-
-namespace seqan3
-{
-
-using nucl16_vector = std::vector<nucl16>;
-
-using nucl16_string = std::basic_string<nucl16, std::char_traits<nucl16>>;
-
-} // namespace seqan3
-
-// ------------------------------------------------------------------
-// literals
-// -----------------------------------------------------------------
-
-namespace seqan3::literal
-{
-
-inline nucl16_vector operator "" _nucl16(const char * s, std::size_t n)
-{
-    nucl16_vector r;
-    r.resize(n);
-
-    std::transform(s, s + n, r.begin(), [] (const char & c)
-    {
-        return nucl16{}.from_char(c);
-    });
-
-    return r;
-}
-
-inline nucl16_string operator "" _nucl16s(const char * s, std::size_t n)
-{
-    nucl16_string r;
-    r.resize(n);
-
-    std::transform(s, s + n, r.begin(), [] (const char & c)
-    {
-        return nucl16{}.from_char(c);
-    });
-
-    return r;
-}
-
-} // namespace seqan3::literal
-
+#include <seqan3/alphabet/composition.hpp>
+#include <seqan3/alphabet/concept.hpp>
+#include <seqan3/alphabet/quality.hpp>
+#include <seqan3/alphabet/range.hpp>

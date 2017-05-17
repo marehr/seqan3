@@ -1,15 +1,5 @@
-add_executable(dna5_test dna5_test.cpp)
-add_test(NAME test_dna5_test COMMAND dna5_test)
-target_link_libraries(dna5_test ${SEQAN3_LIBRARIES})
-
-add_executable(dna5_container_test dna5_container_test.cpp)
-add_test(NAME test_dna5_container_test COMMAND dna5_container_test)
-target_link_libraries(dna5_container_test ${SEQAN3_LIBRARIES})
-
-add_executable(alphabet_nucleotide_nucl16_test nucl16_test.cpp)
-add_test(NAME test_alphabet_nucleotide_nucl16_test COMMAND alphabet_nucleotide_nucl16_test)
-target_link_libraries(alphabet_nucleotide_nucl16_test ${SEQAN3_LIBRARIES})
-
-add_executable(alphabet_nucleotide_nucl16_container_test nucl16_container_test.cpp)
-add_test(NAME test_alphabet_nucleotide_nucl16_container_test COMMAND alphabet_nucleotide_nucl16_container_test)
-target_link_libraries(alphabet_nucleotide_nucl16_container_test ${SEQAN3_LIBRARIES})
+seqan3_test(dna4_test.cpp)
+seqan3_test(rna4_test.cpp)
+seqan3_test(dna5_test.cpp)
+seqan3_test(rna5_test.cpp)
+seqan3_test(nucl16_test.cpp)

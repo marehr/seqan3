@@ -31,31 +31,41 @@
 // DAMAGE.
 //
 // ============================================================================
-// Author: Sara Hetzel <sara.hetzel AT fu-berlin.de>
-// ============================================================================
 
-#include <array>
+#pragma once
 
-#include <gtest/gtest.h>
-#include <seqan3/alphabet/nucleotide/nucl16_container.hpp>
+#include <string>
 
-using namespace seqan3;
+/*!\file version.hpp
+ * \brief Contains SeqAn version macros and global variables.
+ * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
+ */
 
-TEST(alphabet_nucleotides_nucl16_container_test, vector)
+//!\brief The major version as MACRO.
+#define SEQAN_VERSION_MAJOR 3
+//!\brief The minor version as MACRO.
+#define SEQAN_VERSION_MINOR 0
+//!\brief The patch version as MACRO.
+#define SEQAN_VERSION_PATCH 0
+
+//!\brief The full version as MACRO (number).
+#define SEQAN_VERSION (SEQAN_VERSION_MAJOR * 10000 \
+                     + SEQAN_VERSION_MINOR * 100 \
+                     + SEQAN_VERSION_PATCH)
+
+namespace seqan3
 {
-    nucl16_vector v{{nucl16::A}, {nucl16::C}, {nucl16::G}, {nucl16::T}};
 
-    EXPECT_EQ(v[0], nucl16::A);
-    EXPECT_EQ(v[1], nucl16::C);
-    EXPECT_EQ(v[2], nucl16::G);
-    EXPECT_EQ(v[3], nucl16::T);
-}
+//!\brief The major version.
+constexpr uint8_t seqan_version_major = SEQAN_VERSION_MAJOR;
+//!\brief The minor version.
+constexpr uint8_t seqan_version_minor = SEQAN_VERSION_MINOR;
+//!\brief The patch version.
+constexpr uint8_t seqan_version_patch = SEQAN_VERSION_PATCH;
 
-TEST(alphabet_nucleotides_nucl16_container_test, string)
-{
-    nucl16_string s{{nucl16::A}, {nucl16::C}, {nucl16::G}, {nucl16::T}};
-    EXPECT_EQ(s[0], nucl16::A);
-    EXPECT_EQ(s[1], nucl16::C);
-    EXPECT_EQ(s[2], nucl16::G);
-    EXPECT_EQ(s[3], nucl16::T);
-}
+//!\brief The full version as `std::string`.
+std::string const seqan_version = std::to_string(seqan_version_major) + "." +
+                                  std::to_string(seqan_version_minor) + "." +
+                                  std::to_string(seqan_version_patch);
+
+} // namespace seqan3

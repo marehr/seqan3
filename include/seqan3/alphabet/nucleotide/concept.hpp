@@ -31,15 +31,37 @@
 // DAMAGE.
 //
 // ============================================================================
-// Author: Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
-// ============================================================================
+
+/*!\file alphabet/nucleotide/concept.hpp
+ * \ingroup alphabet
+ * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
+ * \brief Provides seqan3::nucleotide_concept.
+ */
 
 #pragma once
 
-#include "concepts/stl.hpp"
-#include "concepts/ranges.hpp"
+#include <seqan3/alphabet/concept.hpp>
 
-/*!\file concepts.hpp
- * \brief Concepts of ranges and containers
- * \ingroup container
- */
+namespace seqan3::detail
+{
+
+//!\brief Metafunction that indicates whether an alphabet is a nucleotide alphabet.
+template <typename type>
+struct is_nucleotide : public std::false_type
+{};
+
+//!\brief Shortcut for seqan3::detail::is_nucleotide.
+template <typename type>
+constexpr bool is_nucleotide_v = is_nucleotide<type>::value;
+
+} // namespace seqan3::detail
+
+namespace seqan3
+{
+
+//!\brief A concept that indicates whether an alphabet represents nucleotides.
+//!\details Refines the seqan3::alphabet_concept.
+template <typename type>
+concept bool nucleotide_concept = alphabet_concept<type> && detail::is_nucleotide_v<type>;
+
+} // namespace seqan3

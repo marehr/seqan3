@@ -1,8 +1,8 @@
-// ==========================================================================
+// ============================================================================
 //                 SeqAn - The Library for Sequence Analysis
-// ==========================================================================
+// ============================================================================
 //
-// Copyright (c) 2006-2017, Knut Reinert, FU Berlin
+// Copyright (c) 2006-2017, Knut Reinert & Freie Universitaet Berlin
 // Copyright (c) 2016-2017, Knut Reinert & MPI Molekulare Genetik
 // All rights reserved.
 //
@@ -30,37 +30,31 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 //
-// ==========================================================================
-// Author: David Heller <david.heller@fu-berlin.de>
-// ==========================================================================
-// Test cases for the biological dna5 alphabet.
-// ==========================================================================
+// ============================================================================
 
-#include <seqan3/alphabet/nucleotide/dna5_container.hpp>
-#include <gtest/gtest.h>
-#include <sstream>
-#include <vector>
+/*!\file core.hpp
+ * \defgroup core
+ *
+ * The core module contains the definition of external concepts, as well as
+ * various utilities that are mostly hidden from the user.
+ *
+ * Place core utilities here that are needed across many modules, but it should
+ * be kept to a minimum.
+ *
+ * TODO more details.
+ *
+ * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
+ * \author Rene Rahn <rene.rahn AT fu-berlin.de>
+ */
 
-using namespace seqan3;
-using namespace seqan3::literal;
+#pragma once
 
-TEST(dna5_test, test_dna5_vector_operator)
-{
-    dna5_vector v;
-    v.resize(5, dna5{dna5::A});
-    EXPECT_EQ(v, "AAAAA"_dna5);
+// ============================================================================
+// External concept implementations
+// ============================================================================
 
-    std::vector<dna5> w {dna5{dna5::A}, dna5{dna5::C}, dna5{dna5::G}, dna5{dna5::T}, dna5{dna5::N}};
-    EXPECT_EQ(w, "ACGTN"_dna5);
-}
+#include <seqan3/core/concept/core.hpp>
+#include <seqan3/core/concept/iterator.hpp>
+#include <seqan3/core/concept/stl_container.hpp>
+#include <seqan3/core/concept/range.hpp>
 
-TEST(dna5_test, test_dna5_string_operator)
-{
-    dna5_string v;
-    v.resize(5, dna5{dna5::A});
-    EXPECT_EQ(v, "AAAAA"_dna5s);
-
-    std::basic_string<dna5, std::char_traits<dna5>> w {dna5{dna5::A}, dna5{dna5::C}, dna5{dna5::G},
-                                                       dna5{dna5::T}, dna5{dna5::N}};
-    EXPECT_EQ(w, "ACGTN"_dna5s);
-}

@@ -31,30 +31,33 @@
 // DAMAGE.
 //
 // ============================================================================
-// Author: Sara Hetzel <sara.hetzel AT fu-berlin.de>
-// ============================================================================
 
 #include <gtest/gtest.h>
-#include <seqan3/alphabet/aminoacid/aa27.hpp>
-#include <seqan3/alphabet/aminoacid/aa27_container.hpp>
+#include <seqan3/core/detail/int_types.hpp>
 
 using namespace seqan3;
 
-TEST(alphabet_aminoacid_aa27_container_test, vector)
+TEST(int_types_test, min_viable_uint_t)
 {
-    aa27_vector v{{aa27::A}, {aa27::C}, {aa27::G}, {aa27::T}};
+    using bool_1_t = detail::min_viable_uint_t<0ull>;
+    using bool_2_t = detail::min_viable_uint_t<1ull>;
+    using uint8_1_t = detail::min_viable_uint_t<2ull>;
+    using uint8_2_t = detail::min_viable_uint_t<0xFFull>;
+    using uint16_1_t = detail::min_viable_uint_t<0x100ull>;
+    using uint16_2_t = detail::min_viable_uint_t<0xFFFFull>;
+    using uint32_1_t = detail::min_viable_uint_t<0x10000ull>;
+    using uint32_2_t = detail::min_viable_uint_t<0xFFFFFFFFull>;
+    using uint64_1_t = detail::min_viable_uint_t<0x100000000ull>;
+    using uint64_2_t = detail::min_viable_uint_t<0xFFFFFFFFFFFFFFFFull>;
 
-    EXPECT_EQ(v[0], aa27::A);
-    EXPECT_EQ(v[1], aa27::C);
-    EXPECT_EQ(v[2], aa27::G);
-    EXPECT_EQ(v[3], aa27::T);
-}
-
-TEST(alphabet_aminoacid_aa27_container_test, string)
-{
-    aa27_string s{{aa27::A}, {aa27::C}, {aa27::G}, {aa27::T}};
-    EXPECT_EQ(s[0], aa27::A);
-    EXPECT_EQ(s[1], aa27::C);
-    EXPECT_EQ(s[2], aa27::G);
-    EXPECT_EQ(s[3], aa27::T);
+    EXPECT_TRUE((std::is_same_v<bool_1_t, bool>));
+    EXPECT_TRUE((std::is_same_v<bool_2_t, bool>));
+    EXPECT_TRUE((std::is_same_v<uint8_1_t, uint8_t>));
+    EXPECT_TRUE((std::is_same_v<uint8_2_t, uint8_t>));
+    EXPECT_TRUE((std::is_same_v<uint16_1_t, uint16_t>));
+    EXPECT_TRUE((std::is_same_v<uint16_2_t, uint16_t>));
+    EXPECT_TRUE((std::is_same_v<uint32_1_t, uint32_t>));
+    EXPECT_TRUE((std::is_same_v<uint32_2_t, uint32_t>));
+    EXPECT_TRUE((std::is_same_v<uint64_1_t, uint64_t>));
+    EXPECT_TRUE((std::is_same_v<uint64_2_t, uint64_t>));
 }

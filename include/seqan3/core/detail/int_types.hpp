@@ -1,8 +1,8 @@
-// ==========================================================================
+// ============================================================================
 //                 SeqAn - The Library for Sequence Analysis
-// ==========================================================================
+// ============================================================================
 //
-// Copyright (c) 2006-2017, Knut Reinert, FU Berlin
+// Copyright (c) 2006-2017, Knut Reinert & Freie Universitaet Berlin
 // Copyright (c) 2016-2017, Knut Reinert & MPI Molekulare Genetik
 // All rights reserved.
 //
@@ -30,66 +30,30 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 //
-// ==========================================================================
-// Author: David Heller <david.heller@fu-berlin.de>
-// ==========================================================================
-// Implementation of the sequence containers for dna5.
-// ==========================================================================
+// ============================================================================
 
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include <type_traits>
 
-#include "../alphabet.hpp"
-#include "../alphabet_container.hpp"
-#include "dna5.hpp"
+#include <seqan3/core/platform.hpp>
 
-// ------------------------------------------------------------------
-// containers
-// -----------------------------------------------------------------
+/*!\file core/detail/int_types.hpp
+ * \brief Contains metaprogramming utilities for integer types.
+ * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
+ * \ingroup core
+ */
 
-namespace seqan3
+namespace seqan3::detail
 {
 
-using dna5_vector = std::vector<dna5>;
+//!\cond DEV
+//!\brief Given a value, return the smallest unsigned integer that can hold it.
+template <uint64_t value>
+using min_viable_uint_t = std::conditional_t<value <= 1ull,          bool,
+                          std::conditional_t<value <= 255ull,        uint8_t,
+                          std::conditional_t<value <= 65535ull,      uint16_t,
+                          std::conditional_t<value <= 4294967295ull, uint32_t, uint64_t>>>>;
+//!\endcond
 
-using dna5_string = std::basic_string<dna5, std::char_traits<dna5>>;
-
-} // namespace seqan3
-
-// ------------------------------------------------------------------
-// literals
-// -----------------------------------------------------------------
-
-namespace seqan3::literal
-{
-
-inline dna5_vector operator "" _dna5(const char * s, std::size_t n)
-{
-    dna5_vector r;
-    r.resize(n);
-
-    std::transform(s, s + n, r.begin(), [] (const char & c)
-    {
-        return dna5{}.from_char(c);
-    });
-
-    return r;
-}
-
-inline dna5_string operator "" _dna5s(const char * s, std::size_t n)
-{
-    dna5_string r;
-    r.resize(n);
-
-    std::transform(s, s + n, r.begin(), [] (const char & c)
-    {
-        return dna5{}.from_char(c);
-    });
-
-    return r;
-}
-
-} // namespace seqan3::literal
+} // namespace seqan3::detail
