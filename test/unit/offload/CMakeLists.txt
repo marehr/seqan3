@@ -49,3 +49,5 @@ macro (seqan3_mpi_test target_cpp)
     unset (test_path)
     unset (target)
 endmacro ()
+
+seqan3_mpi_test (mpi_backend_test.cpp)
