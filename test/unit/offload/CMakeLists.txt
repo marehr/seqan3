@@ -52,3 +52,7 @@ endmacro ()
 
 seqan3_mpi_test (mpi_backend_test.cpp)
 seqan3_mpi_test (mpi_gtest_test.cpp)
+
+seqan3_mpi_test (sized_buffer_ptr_test.cpp)
+seqan3_mpi_test (target_migratable_test.cpp)
+seqan3_mpi_test (target_function_test.cpp)
