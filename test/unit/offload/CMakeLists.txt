@@ -60,3 +60,7 @@ seqan3_mpi_test (target_migratable_test.cpp)
 seqan3_mpi_test (target_function_test.cpp)
 
 seqan3_mpi_test (contiguous_container_test.cpp)
+
+seqan3_mpi_test (mpi_offload_test.cpp)
+seqan3_mpi_test (mpi_offload_executor_test.cpp)
+seqan3_mpi_test (mpi_offload_twoway_executor_test.cpp)
