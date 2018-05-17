@@ -13,3 +13,6 @@
 [submodule "ham"]
 	path = submodules/ham
 	url = https://github.com/marehr/ham.git
+[submodule "executors-impl"]
+	path = submodules/executors-impl
+	url = https://github.com/marehr/executors-impl.git
