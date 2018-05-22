@@ -38,6 +38,8 @@
 
 #include <seqan3/offload/target_migratable.hpp>
 
+#include <seqan3/offload/contiguous_container.hpp>
+
 using namespace seqan3;
 
 template <typename value_t>
@@ -76,4 +78,45 @@ TEST(default_target_migratable, serialise_and_deserialise)
     offload::target_migratable<int> migratable{node, 5}; // serialise
     EXPECT_EQ(migratable_value(migratable), 5); // internal value
     EXPECT_EQ(static_cast<int>(migratable), 5); // deserialise
+}
+
+#include "target_migratable_cereal_types.hpp"
+
+bool test_transferred_std_vector(seqan3::offload::target_migratable<std::vector<int>> migratable, size_t size)
+{
+    using namespace seqan3::offload;
+    std::vector<int> expect(size, 4);
+
+    // did deserialise work
+    {
+        std::vector<int> result = migratable;
+        EXPECT_EQ(result, expect);
+    }
+
+    bool passed = ::testing::UnitTest::GetInstance()->Passed();
+    return passed;
+}
+
+TEST(target_migratable, std_vector)
+{
+    using namespace seqan3::offload;
+
+    using vector_t = std::vector<int>;
+    constexpr unsigned size = 10000;
+
+    vector_t vector(size, 4);
+    EXPECT_EQ(vector.size(), size);
+
+    node_t node{2};
+    target_migratable<vector_t> migratable{node, std::move(vector)};
+
+    target_migratable sized_buffer = migratable.data();
+
+    EXPECT_EQ(sized_buffer.data().node(), node);
+    EXPECT_NE(sized_buffer.data().get(), nullptr);
+    EXPECT_GE(sized_buffer.size(), vector.size());
+
+    function<test_transferred_std_vector> offload_test{migratable, size};
+    bool succeeded = ham::offload::sync(node, offload_test);
+    EXPECT_TRUE(succeeded);
 }

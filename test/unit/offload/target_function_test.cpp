@@ -42,6 +42,8 @@
 
 #include <seqan3/offload/target_function.hpp>
 
+#include <seqan3/offload/contiguous_container.hpp>
+
 using namespace seqan3;
 
 int forty_two_fn()
@@ -183,7 +185,10 @@ using range_types = ::testing::Types <
     // std::tuple<std::integral_constant<int, 1006>, std::array<int, 1006>>, // 1005 works on my system
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10>>,
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10> const &>,
-    std::tuple<std::integral_constant<int, 10>, std::array<int, 10> &&>
+    std::tuple<std::integral_constant<int, 10>, std::array<int, 10> &&>,
+    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int>>,
+    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int> const &>,
+    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int> &&>
 >;
 
 TYPED_TEST_CASE(offload_accumulate, range_types);
