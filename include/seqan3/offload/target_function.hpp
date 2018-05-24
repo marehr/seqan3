@@ -81,26 +81,9 @@ public:
 
     result_type operator()() const
     {
-        std::cout << "invoke function_ptr on " << ham::offload::this_node() << std::endl;
+        // std::cout << "invoke function_ptr on " << ham::offload::this_node() << std::endl;
         return std::apply(function_ptr, args);
     }
-
-//     result_type operator()() const
-//     {
-//         constexpr auto size = std::tuple_size_v<arguments_type>;
-//         // static_assert(size > 0);
-//         // call a helper with an integer sequence to unpack the tupel
-//         return evaluation_helper(std::make_index_sequence<size>{});
-//     }
-// private:
-//     // this helper is needed to extract the actual integer sequence from seq by template argument deduction
-//     template<std::size_t... S>
-//     result_type evaluation_helper(std::index_sequence<S...>) const
-//     {
-//         // call the function with the unpacked tuple
-//         // return function_ptr(std::forward<decltype(std::get<S>(args))>(std::get<S>(args))...);
-//         return function_ptr(std::get<S>(args)...);
-//     }
 
 protected:
     node_t target_node;
