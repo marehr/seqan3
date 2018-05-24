@@ -38,6 +38,7 @@
 
 #include <seqan3/core/platform.hpp>
 #include <seqan3/offload/target_migratable.hpp>
+#include <seqan3/offload/sized_buffer_ptr.hpp>
 
 namespace seqan3::offload
 {
@@ -158,11 +159,10 @@ struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_
     target_migratable& operator=(target_migratable&&) = default;
 
     target_migratable(node_t target_node, contiguous_container<value_t> const & contiguous_container)
-        : _buffer_ptr{ham::offload::allocate<value_t>(target_node, contiguous_container.size())},
-          _size{contiguous_container.size()}
+        : _sized_buffer_ptr{ham::offload::allocate<value_t>(target_node, contiguous_container.size()), contiguous_container.size()}
     {
         // std::cout << "target_migratable<const contiguous_container&>-ctor&& on " << ham::offload::this_node() << " -> " << target_node << ": "; detail::print(contiguous_container); std::cout << std::endl;
-        ham::offload::put_sync(contiguous_container.begin(), _buffer_ptr, _size); // transfer data to node
+        ham::offload::put_sync(contiguous_container.begin(), data(), size()); // transfer data to node
     }
 
     operator contiguous_container<value_t>() const
@@ -170,22 +170,23 @@ struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_
         // static_assert(std::is_const_v<decltype(value)>);
         // static_assert(std::is_const_v<decltype(this)>);
         // std::cout << "target_migratable<contiguous_container>-conversion on " << ham::offload::this_node() << ": "; detail::print(value); std::cout << std::endl;
-        return {_size, _buffer_ptr.get()};
+        return {size(), _sized_buffer_ptr.get()};
     }
 
-    ham::offload::buffer_ptr<value_t> data() const
+    // TODO: add const version
+    // https://github.com/noma/ham/issues/12
+    ham::offload::buffer_ptr<value_t> & data()
     {
-        return _buffer_ptr;
+        return _sized_buffer_ptr;
     }
 
     size_t size() const
     {
-        return _size;
+        return _sized_buffer_ptr.size();
     }
 
 protected:
-    ham::offload::buffer_ptr<value_t> _buffer_ptr;
-    size_t _size;
+    sized_buffer_ptr<value_t> _sized_buffer_ptr;
 };
 
 }
