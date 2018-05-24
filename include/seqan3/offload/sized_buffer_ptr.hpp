@@ -7,7 +7,7 @@ namespace seqan3::offload
 {
 
 template<typename value_t>
-class sized_buffer_ptr : ham::offload::buffer_ptr<value_t>
+class sized_buffer_ptr : public ham::offload::buffer_ptr<value_t>
 {
 public:
     sized_buffer_ptr() = default;
@@ -28,10 +28,7 @@ public:
         : ham::offload::buffer_ptr<value_t>{std::move(buffer)}, size_{size}
     {}
 
-    using ham::offload::buffer_ptr<value_t>::get;
-    using ham::offload::buffer_ptr<value_t>::node;
-
-    size_t size()
+    size_t size() const
     {
         return size_;
     }
