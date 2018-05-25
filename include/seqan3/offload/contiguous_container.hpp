@@ -34,6 +34,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory>
 
 #include <seqan3/core/platform.hpp>
@@ -57,6 +58,7 @@ struct contiguous_container
 {
     using pointer = value_t*;
     using value_type = value_t;
+    using deleter_type = deleter_t;
     using unique_ptr_t = std::unique_ptr<value_t, deleter_t>;
 
     contiguous_container()
@@ -147,10 +149,18 @@ struct is_contiguous_container<contiguous_container_t, std::enable_if_t<
 >> : is_contiguous_container<std::decay_t<contiguous_container_t>>
 {};
 
+enum struct target_migratable_mode
+{
+    push_data,
+    pull_data
+};
+
+// TODO: destructor
 template<typename contiguous_container_t>
 struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_container<contiguous_container_t>::value>>
 {
     using value_t = typename std::decay_t<contiguous_container_t>::value_type;
+    using deleter_t = typename std::decay_t<contiguous_container_t>::deleter_type;
 
     target_migratable() = default;
     target_migratable(const target_migratable&) = default;
@@ -158,24 +168,107 @@ struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_
     target_migratable& operator=(const target_migratable&) = default;
     target_migratable& operator=(target_migratable&&) = default;
 
-    target_migratable(node_t target_node, contiguous_container<value_t> const & contiguous_container)
-        : _sized_buffer_ptr{ham::offload::allocate<value_t>(target_node, contiguous_container.size()), contiguous_container.size()}
+    target_migratable(node_t target_node, contiguous_container<value_t, deleter_t> const & contiguous_container)
+        : _sized_buffer_ptr{}, _mode{target_node == node_t{0u} ? target_migratable_mode::pull_data : target_migratable_mode::push_data}
     {
+        // NOTE: We have two cases where migrations are used to transfer data
+        // when invoking a seqan3::offload::target_function
+        //      vector<int> f(vector<int>, vector<int>)
+        // 1) Each argument of a function `f` will be transferred from the host
+        //    through a migratable to the target_node. HAM uses the classic
+        //    heterogeneous model where the host issues all data-transfer and
+        //    remote method invocations. That means the constructor is
+        //    responsible for the data-transfer from host to the target_node,
+        //    since this is the only function that will called on the host.
+        //
+        //    The constructor will not be called on the target_node, because
+        //    the instance of this class will be copied by MPI to the
+        //    target_node.
+        // 2) The return type will be transferred... TODO
+
+        // target_migratable will only be constructed on the node where the
+        // data lives.
+        assert(ham::offload::this_node() != target_node);
         // std::cout << "target_migratable<const contiguous_container&>-ctor&& on " << ham::offload::this_node() << " -> " << target_node << ": "; detail::print(contiguous_container); std::cout << std::endl;
-        ham::offload::put_sync(contiguous_container.begin(), data(), size()); // transfer data to node
+        // host-to-node transfer
+        if (mode(target_node) == target_migratable_mode::push_data)
+        {
+            // std::cout << ham::offload::this_node() << ": contiguous_container{" << target_node << "}: push_data" << std::endl;
+            allocate_and_transfer_data_to_node(target_node, contiguous_container);
+        }
+        else
+        {
+            // std::cout << ham::offload::this_node() << ": contiguous_container{" << target_node << "}: pull_data" << std::endl;
+            // uhhh; this is more complicated
+            // in pull_data:
+            // * constructor contiguous_container && (data only lives in remote call; must live longer)
+            // * size = contiguous_container.size()
+            // * raw_ptr = contiguous_container.release()
+            // * _sized_buffer_ptr = {target_node, raw_ptr, size};
+            //
+            // Memory will be cleared in de-serialisation / destructor
+            size_t size = contiguous_container.size();
+            // std::cout << "\tcontiguous_container: " << contiguous_container.size() << ", " << contiguous_container.begin() << std::endl;
+            value_t* raw_ptr = const_cast<seqan3::offload::contiguous_container<value_t, deleter_t>&>(contiguous_container).release();
+            // std::cout << "\tcontiguous_container: " << contiguous_container.size() << ", " << contiguous_container.begin() << std::endl;
+            _sized_buffer_ptr = {{raw_ptr, ham::offload::this_node()}, size};
+            // std::cout << "\t_sized_buffer_ptr: " << "{{" << raw_ptr << ", " << ham::offload::this_node() << "}," << size << "}" << std::endl;
+        }
     }
 
-    operator contiguous_container<value_t>() const
+    target_migratable_mode mode([[maybe_unused]] node_t target_node) const
     {
+        // return target_node == node_t{0u} ? target_migratable_mode::pull_data : target_migratable_mode::push_data;
+        return _mode;
+    }
+
+    void allocate_and_transfer_data_to_node(node_t target_node, contiguous_container<value_t, deleter_t> const & contiguous_container)
+    {
+        size_t size = contiguous_container.size();
+        _sized_buffer_ptr = {ham::offload::allocate<value_t>(target_node, size), size};
+        ham::offload::put_sync(contiguous_container.begin(), _sized_buffer_ptr, size);
+    }
+
+    value_t* allocate_and_transfer_data_from_node(sized_buffer_ptr<value_t> & buffer) const
+    {
+        // std::cout << ":: " << "allocate_and_transfer_data_from_node" << std::endl;
+        value_t* value_ptr = static_cast<value_t*>(std::malloc(buffer.size() * sizeof(value_t)));
+        // std::cout << ":: " << "size = " << buffer.size() << std::endl;
+        ham::offload::get_sync(buffer, value_ptr, buffer.size());
+        // std::cout << ":: " << "copied data back" << std::endl;
+        // remote free buffer on node
+        ham::offload::free(buffer);
+        // std::cout << ":: " << "freed data" << std::endl;
+        // std::cout << ":: " << *value_ptr << std::endl;
+        return value_ptr;
+    }
+
+    // NOTE: this is non-const, since it will move out the content
+    operator contiguous_container<value_t, deleter_t>()// const
+    {
+        // TODO/NOTE: nodes might be different
+        // we assume that migrations move data to a different node
+        // assert(ham::offload::this_node() == _sized_buffer_ptr.node());
+
+        // if (ham::offload::is_host() && )
         // static_assert(std::is_const_v<decltype(value)>);
         // static_assert(std::is_const_v<decltype(this)>);
         // std::cout << "target_migratable<contiguous_container>-conversion on " << ham::offload::this_node() << ": "; detail::print(value); std::cout << std::endl;
-        return {size(), _sized_buffer_ptr.get()};
+        if (mode(_sized_buffer_ptr.node()) == target_migratable_mode::push_data)
+        {
+            // std::cout << "() push_data" << std::endl;
+            // _sized_buffer_ptr has copy-and-swap semantics
+            sized_buffer_ptr<value_t> buffer{std::move(_sized_buffer_ptr)};
+            return {buffer.size(), buffer.get()};
+        }
+        // std::cout << "() pull_data" << std::endl;
+        sized_buffer_ptr<value_t> buffer{std::move(_sized_buffer_ptr)};
+        return {buffer.size(), allocate_and_transfer_data_from_node(buffer)};
     }
 
     // TODO: add const version
     // https://github.com/noma/ham/issues/12
-    ham::offload::buffer_ptr<value_t> & data()
+    sized_buffer_ptr<value_t> & data()
     {
         return _sized_buffer_ptr;
     }
@@ -187,6 +280,7 @@ struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_
 
 protected:
     sized_buffer_ptr<value_t> _sized_buffer_ptr;
+    target_migratable_mode _mode;
 };
 
 }

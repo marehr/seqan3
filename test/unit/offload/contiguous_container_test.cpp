@@ -105,27 +105,49 @@ TEST(contiguous_container, is_contiguous_container)
     EXPECT_TRUE((is_contiguous_container<volatile contiguous_container<int> &&>::value));
 }
 
-void test_transferred_contiguous_container
-(
-    seqan3::offload::target_migratable<seqan3::offload::contiguous_container<int>> migratable,
-    size_t size
-)
+void check_migratable(std::vector<int> expect_vector,
+                      seqan3::offload::target_migratable<seqan3::offload::contiguous_container<int>> & migratable)
 {
-    std::vector<int> expect(size, 4);
-
-    // was buffer correctly copied?
-    {
-        ham::offload::buffer_ptr<int> buffer = migratable.data();
-        std::vector<int> result{buffer.get(), buffer.get() + size};
-        EXPECT_EQ(result, expect);
-    }
+    // std::cout << "check_migratable" << std::endl;
+    EXPECT_EQ(migratable.data().size(), 10000u);
+    EXPECT_EQ(expect_vector.size(), 10000u);
 
     // did deserialise work?
     {
-        seqan3::offload::contiguous_container<int> buffer = migratable;
-        std::vector<int> result{buffer.begin(), buffer.end()};
+        // contiguous_container will free the buffer at the end of this scope
+        seqan3::offload::contiguous_container<int> container = migratable;
+        std::vector<int> result{container.begin(), container.end()};
+        EXPECT_EQ(result, expect_vector);
+    }
+
+    // NOTE: buffer from migratable will be moved out at this point
+    {
+        seqan3::offload::sized_buffer_ptr<int> buffer = migratable.data();
+        EXPECT_EQ(buffer.get(), nullptr);
+        EXPECT_EQ(buffer.size(), 0u);
+    }
+}
+
+seqan3::offload::target_migratable<seqan3::offload::contiguous_container<int>> test_transferred_contiguous_container
+(
+    seqan3::offload::target_migratable<seqan3::offload::contiguous_container<int>> migratable
+)
+{
+    std::vector<int> expect(migratable.data().size(), 4);
+
+    // was buffer correctly copied / pushed to the node?
+    {
+        seqan3::offload::sized_buffer_ptr<int> buffer = migratable.data();
+        std::vector<int> result(buffer.get(), buffer.get() + buffer.size());
         EXPECT_EQ(result, expect);
     }
+
+    check_migratable(std::move(expect), migratable);
+
+    // create a new local buffer and transfer it back to host
+    seqan3::offload::contiguous_container<int> container{10000};
+    std::fill(container.begin(), container.end(), 8);
+    return {seqan3::offload::node_t{0u}, std::move(container)};
 }
 
 TEST(contiguous_container, target_migratable)
@@ -138,13 +160,16 @@ TEST(contiguous_container, target_migratable)
     int* begin_ptr = contiguous_container.begin();
 
     seqan3::offload::node_t node{2};
-    seqan3::offload::target_migratable<contiguous_container_t> migratable{node, std::move(contiguous_container)};
+    seqan3::offload::target_migratable<contiguous_container_t> arg_migratable{node, std::move(contiguous_container)};
 
-    ham::offload::buffer_ptr<int> buffer = migratable.data();
+    ham::offload::buffer_ptr<int> buffer = arg_migratable.data();
     EXPECT_EQ(buffer.node(), node);
     EXPECT_NE(buffer.get(), nullptr);
     EXPECT_NE(buffer.get(), begin_ptr);
-    EXPECT_EQ(migratable.size(), size);
+    EXPECT_EQ(arg_migratable.size(), size);
 
-    seqan3::test::mpi_gtest<test_transferred_contiguous_container>(node, migratable, size);
+    seqan3::offload::target_migratable<contiguous_container_t> return_migratable = seqan3::test::mpi_gtest<test_transferred_contiguous_container>(node, arg_migratable);
+
+    std::vector<int> expect(size, 8);
+    check_migratable(std::move(expect), return_migratable);
 }
