@@ -30,9 +30,10 @@ struct target_migratable<std::vector<value_t>>
         // ham::offload::put_sync(vector.begin(), buffer_ptr, size); // transfer data to node
     }
 
-    operator std::vector<value_t>() const
+    // NOTE: data will be moved out
+    operator std::vector<value_t>() // const
     {
-        contiguous_container_t buffer_ptr = _migrate_sized_buffer;
+        contiguous_container_t buffer_ptr = std::move(_migrate_sized_buffer);
         std::vector<value_t> vector(buffer_ptr.begin(), buffer_ptr.end());
         // static_assert(std::is_const_v<decltype(value)>);
         // static_assert(std::is_const_v<decltype(this)>);

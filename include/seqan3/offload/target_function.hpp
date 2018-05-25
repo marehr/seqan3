@@ -79,7 +79,11 @@ public:
         return ham::offload::async(target_node, *this);
     }
 
-    result_type operator()() const
+    // NOTE: this is non-const, since the args which consists of
+    // target_migratable's have move semantics; When converting
+    // `static_cast<value_t>(target_migratable<value_t>{std::move(args[0])})`
+    // the content in target_migratable will be moved out of args[0].
+    result_type operator()() // const
     {
         // std::cout << "invoke function_ptr on " << ham::offload::this_node() << std::endl;
         return std::apply(function_ptr, args);

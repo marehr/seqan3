@@ -72,11 +72,12 @@ struct target_migratable<std::vector<value_t>>
         // ham::offload::put_sync(vector.begin(), buffer_ptr, size); // transfer data to node
     }
 
-    operator std::vector<value_t>() const
+    // NOTE: data will be moved out
+    operator std::vector<value_t>() // const
     {
         std::vector<value_t> vector;
 
-        contiguous_container_t buffer_ptr = _migrate_sized_buffer;
+        contiguous_container_t buffer_ptr = std::move(_migrate_sized_buffer);
 
         std::istringstream istream{std::ios::binary};
         istream.rdbuf()->pubsetbuf(buffer_ptr.begin(), buffer_ptr.size());

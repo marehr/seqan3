@@ -64,10 +64,11 @@ struct target_migratable
         // std::cout << "default-target_migratable-ctor on " << ham::offload::this_node() << " -> " << target_node << ": "; detail::print(value); std::cout << std::endl;
     }
 
-    operator std::decay_t<value_t> () const
+    // NOTE: this is non-const, since it will move out the content
+    operator std::decay_t<value_t> ()// const
     {
         // std::cout << "default-target_migratable-conversion on " << ham::offload::this_node() << ": "; detail::print(value); std::cout << std::endl;
-        return value;
+        return std::move(value);
     }
 protected:
     std::decay_t<value_t> value;
