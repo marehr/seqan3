@@ -43,7 +43,8 @@
 
 #include <seqan3/offload/target_migratable.hpp>
 
-namespace seqan3::offload {
+namespace seqan3::offload
+{
 
 template <auto fn_ptr>
 struct target_function //: function<fn_ptr>
@@ -55,7 +56,7 @@ protected:
     template<typename result_t, typename... pars_t, result_t (*function_ptr_)(pars_t...)>
     struct target_function_traits<result_t (*)(pars_t...), function_ptr_>
     {
-        using result_type = result_t;
+        using result_type = target_migratable<result_t>;
         using raw_arguments_type = std::tuple<pars_t...>;
         using arguments_type = std::tuple<target_migratable<pars_t>...>;
         static constexpr auto function_ptr = function_ptr_;
@@ -85,8 +86,12 @@ public:
     // the content in target_migratable will be moved out of args[0].
     result_type operator()() // const
     {
+        // will be executed on the target_node
+        assert(target_node == ham::offload::this_node());
+
         // std::cout << "invoke function_ptr on " << ham::offload::this_node() << std::endl;
-        return std::apply(function_ptr, args);
+        // NOTE: data will be moved back to the host
+        return {node_t{0u}, std::apply(function_ptr, args)};
     }
 
 protected:

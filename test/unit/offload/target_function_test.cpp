@@ -64,7 +64,7 @@ TEST(forty_two_fn, result_type)
 {
     using target_function_t = seqan3::offload::target_function<forty_two_fn>;
 
-    using expected_result_type = int;
+    using expected_result_type = seqan3::offload::target_migratable<int>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -100,7 +100,7 @@ TEST(add_fn, result_type)
 {
     using target_function_t = seqan3::offload::target_function<add_fn>;
 
-    using expected_result_type = int;
+    using expected_result_type = seqan3::offload::target_migratable<int>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -144,7 +144,7 @@ TEST(accumulate_buffer_ptr, result_type)
 {
     using target_function_t = seqan3::offload::target_function<accumulate_buffer_ptr>;
 
-    using expected_result_type = int;
+    using expected_result_type = seqan3::offload::target_migratable<int>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -181,7 +181,7 @@ public:
     using target_function_t = seqan3::offload::target_function<accumulate<range_t>>;
 };
 
-using range_types = ::testing::Types <
+using offload_accumulate_types = ::testing::Types <
     // TODO: The array in this test case is to big and gets a MPI exception
     // std::tuple<std::integral_constant<int, 1006>, std::array<int, 1006>>, // 1005 works on my system
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10>>,
@@ -192,7 +192,7 @@ using range_types = ::testing::Types <
     std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int> &&>
 >;
 
-TYPED_TEST_CASE(offload_accumulate, range_types);
+TYPED_TEST_CASE(offload_accumulate, offload_accumulate_types);
 
 TYPED_TEST(offload_accumulate, arguments_type)
 {
@@ -210,7 +210,7 @@ TYPED_TEST(offload_accumulate, result_type)
 {
     using target_function_t = typename TestFixture::target_function_t;
 
-    using expected_type = int;
+    using expected_type = seqan3::offload::target_migratable<int>;
     using actual_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_type, actual_type>));
 }

@@ -162,6 +162,9 @@ struct target_migratable<contiguous_container_t, std::enable_if_t<is_contiguous_
     using value_t = typename std::decay_t<contiguous_container_t>::value_type;
     using deleter_t = typename std::decay_t<contiguous_container_t>::deleter_type;
 
+    // TODO: remove default constructor when result_container<> uses
+    // target_migratable<> internally instead of current implementation
+    // result_container<target_migratable<>>
     target_migratable() = default;
     target_migratable(const target_migratable&) = default;
     target_migratable(target_migratable&&) = default;

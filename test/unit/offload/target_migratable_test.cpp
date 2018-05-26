@@ -56,7 +56,7 @@ auto migratable_value(const offload::target_migratable<value_t> & migratable)
 
 TEST(target_migratable, constructor)
 {
-    EXPECT_FALSE(std::is_default_constructible_v<offload::target_migratable<int>>);
+    EXPECT_TRUE(std::is_default_constructible_v<offload::target_migratable<int>>);
     EXPECT_TRUE(std::is_copy_constructible_v<offload::target_migratable<int>>);
     EXPECT_TRUE(std::is_move_constructible_v<offload::target_migratable<int>>);
 }

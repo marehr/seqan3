@@ -51,6 +51,10 @@ namespace seqan3::offload
 template<typename value_t, typename = void>
 struct target_migratable
 {
+    // TODO: remove default constructor when result_container<> uses
+    // target_migratable<> internally instead of current implementation
+    // result_container<target_migratable<>>
+    target_migratable() = default;
     target_migratable(const target_migratable&) = default;
     target_migratable(target_migratable&&) = default;
     target_migratable& operator=(const target_migratable&) = default;
@@ -74,4 +78,4 @@ protected:
     std::decay_t<value_t> value;
 };
 
-} // seqan3::offload
+} // namespace seqan3::offload
