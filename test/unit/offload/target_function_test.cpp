@@ -75,9 +75,8 @@ TEST(forty_two_fn, remote_execution)
 
     offload::node_t target = 2;
 
-    auto f1 = target_function_t{target}.async();
-
-    EXPECT_EQ(f1.get(), 45);
+    int result = target_function_t{target}.async().get();
+    EXPECT_EQ(result, 45);
 }
 
 int add_fn(int x, int y)
@@ -117,8 +116,10 @@ TEST(add_fn, remote_execution)
     auto f1 = target_function_t{target, x, y}.async();
     auto f2 = target_function_t{target, 15, 20}.async();
 
-    EXPECT_EQ(f1.get(), 15 + 21);
-    EXPECT_EQ(f2.get(), 15 + 20);
+    int result1 = f1.get();
+    int result2 = f2.get();
+    EXPECT_EQ(result1, 15 + 21);
+    EXPECT_EQ(result2, 15 + 20);
 }
 
 int accumulate_buffer_ptr(ham::offload::buffer_ptr<int> numbers_buffer, size_t n)
@@ -161,8 +162,8 @@ TEST(accumulate_buffer_ptr, remote_execution)
     ham::offload::buffer_ptr<int> numbers_buffer = ham::offload::allocate<int>(target, n);
     ham::offload::put(numbers, numbers_buffer, n);
 
-    auto f1 = target_function_t{target, numbers_buffer, n}.async();
-    EXPECT_EQ(f1.get(), 11 * 5);
+    int result = target_function_t{target, numbers_buffer, n}.async().get();
+    EXPECT_EQ(result, 11 * 5);
 }
 
 template <typename range_t>
@@ -225,6 +226,6 @@ TYPED_TEST(offload_accumulate, remote_execution)
     std::decay_t<range_t> numbers{size};
     std::for_each(numbers.begin(), numbers.end(), [](int &i){ i = 2; });
 
-    auto f1 = target_function_t{target, std::move(numbers)}.async();
-    EXPECT_EQ(f1.get(), 2 * size);
+    int result = target_function_t{target, std::move(numbers)}.async().get();
+    EXPECT_EQ(result, 2 * size);
 }
