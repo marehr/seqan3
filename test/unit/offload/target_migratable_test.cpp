@@ -37,8 +37,8 @@
 #include <type_traits>
 
 #include <seqan3/offload/target_migratable.hpp>
-
 #include <seqan3/offload/contiguous_container.hpp>
+#include <seqan3/test/mpi_gtest.hpp>
 
 using namespace seqan3;
 
@@ -92,9 +92,6 @@ bool test_transferred_std_vector(seqan3::offload::target_migratable<std::vector<
         std::vector<int> result = migratable;
         EXPECT_EQ(result, expect);
     }
-
-    bool passed = ::testing::UnitTest::GetInstance()->Passed();
-    return passed;
 }
 
 TEST(target_migratable, std_vector)
@@ -116,7 +113,5 @@ TEST(target_migratable, std_vector)
     EXPECT_NE(sized_buffer.data().get(), nullptr);
     EXPECT_GE(sized_buffer.size(), vector.size());
 
-    function<test_transferred_std_vector> offload_test{migratable, size};
-    bool succeeded = ham::offload::sync(node, offload_test);
-    EXPECT_TRUE(succeeded);
+    test::mpi_gtest<test_transferred_std_vector>(node, std::move(migratable), size);
 }
