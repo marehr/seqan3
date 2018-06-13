@@ -56,9 +56,9 @@ protected:
     template<typename result_t, typename... pars_t, result_t (*function_ptr_)(pars_t...)>
     struct target_function_traits<result_t (*)(pars_t...), function_ptr_>
     {
-        using result_type = target_migratable<result_t>;
+        using result_type = target_migratable<result_t, target_migratable_mode::pull_data>;
         using raw_arguments_type = std::tuple<pars_t...>;
-        using arguments_type = std::tuple<target_migratable<pars_t>...>;
+        using arguments_type = std::tuple<target_migratable<pars_t, target_migratable_mode::push_data>...>;
         static constexpr auto function_ptr = function_ptr_;
     };
 
@@ -91,7 +91,7 @@ public:
 
         // std::cout << "invoke function_ptr on " << ham::offload::this_node() << std::endl;
         // NOTE: data will be moved back to the host
-        return {node_t{0u}, std::apply(function_ptr, args)};
+        return {/*node_t{0u},*/ std::apply(function_ptr, args)};
     }
 
 protected:

@@ -45,6 +45,7 @@
 #include <seqan3/offload/contiguous_container.hpp>
 
 using namespace seqan3;
+using modes = seqan3::offload::target_migratable_mode;
 
 int forty_two_fn()
 {
@@ -64,7 +65,7 @@ TEST(forty_two_fn, result_type)
 {
     using target_function_t = seqan3::offload::target_function<forty_two_fn>;
 
-    using expected_result_type = seqan3::offload::target_migratable<int>;
+    using expected_result_type = seqan3::offload::target_migratable<int, modes::pull_data>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -89,8 +90,8 @@ TEST(add_fn, arguments_type)
     using target_function_t = seqan3::offload::target_function<add_fn>;
 
     using expected_arguments_type = std::tuple<
-        offload::target_migratable<int>,
-        offload::target_migratable<int>
+        offload::target_migratable<int, modes::push_data>,
+        offload::target_migratable<int, modes::push_data>
     >;
     using actual_arguments_type = typename target_function_t::arguments_type;
     EXPECT_TRUE((std::is_same_v<expected_arguments_type, actual_arguments_type>));
@@ -100,7 +101,7 @@ TEST(add_fn, result_type)
 {
     using target_function_t = seqan3::offload::target_function<add_fn>;
 
-    using expected_result_type = seqan3::offload::target_migratable<int>;
+    using expected_result_type = seqan3::offload::target_migratable<int, modes::pull_data>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -133,8 +134,8 @@ TEST(accumulate_buffer_ptr, arguments_type)
     using target_function_t = seqan3::offload::target_function<accumulate_buffer_ptr>;
 
     using expected_arguments_type = std::tuple<
-        offload::target_migratable<ham::offload::buffer_ptr<int>>,
-        offload::target_migratable<size_t>
+        offload::target_migratable<ham::offload::buffer_ptr<int>, modes::push_data>,
+        offload::target_migratable<size_t, modes::push_data>
     >;
     using actual_arguments_type = typename target_function_t::arguments_type;
     EXPECT_TRUE((std::is_same_v<expected_arguments_type, actual_arguments_type>));
@@ -144,7 +145,7 @@ TEST(accumulate_buffer_ptr, result_type)
 {
     using target_function_t = seqan3::offload::target_function<accumulate_buffer_ptr>;
 
-    using expected_result_type = seqan3::offload::target_migratable<int>;
+    using expected_result_type = seqan3::offload::target_migratable<int, modes::pull_data>;
     using actual_result_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_result_type, actual_result_type>));
 }
@@ -200,7 +201,7 @@ TYPED_TEST(offload_accumulate, arguments_type)
     using target_function_t = typename TestFixture::target_function_t;
 
     using expected_type = std::tuple<
-        offload::target_migratable<range_t>
+        offload::target_migratable<range_t, modes::push_data>
     >;
     using actual_type = typename target_function_t::arguments_type;
     EXPECT_TRUE((std::is_same_v<expected_type, actual_type>));
@@ -210,7 +211,7 @@ TYPED_TEST(offload_accumulate, result_type)
 {
     using target_function_t = typename TestFixture::target_function_t;
 
-    using expected_type = seqan3::offload::target_migratable<int>;
+    using expected_type = seqan3::offload::target_migratable<int, modes::pull_data>;
     using actual_type = typename target_function_t::result_type;
     EXPECT_TRUE((std::is_same_v<expected_type, actual_type>));
 }

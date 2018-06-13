@@ -41,57 +41,72 @@
 #include <seqan3/test/mpi_gtest.hpp>
 
 using namespace seqan3;
+using modes = offload::target_migratable_mode;
 
-template <typename value_t>
-struct default_target_migratable : offload::target_migratable<value_t>
+template <typename value_t, modes mode>
+struct default_target_migratable : offload::target_migratable<value_t, mode>
 {
-    using offload::target_migratable<value_t>::value;
+    using offload::target_migratable<value_t, mode>::value;
 };
 
-template <typename value_t>
-auto migratable_value(const offload::target_migratable<value_t> & migratable)
+template <typename value_t, modes mode>
+auto migratable_value(const offload::target_migratable<value_t, mode> & migratable)
 {
-    return reinterpret_cast<const default_target_migratable<value_t>*>(&migratable)->value;
+    return reinterpret_cast<const default_target_migratable<value_t, mode>*>(&migratable)->value;
 }
 
 TEST(target_migratable, constructor)
 {
-    EXPECT_TRUE(std::is_default_constructible_v<offload::target_migratable<int>>);
-    EXPECT_TRUE(std::is_copy_constructible_v<offload::target_migratable<int>>);
-    EXPECT_TRUE(std::is_move_constructible_v<offload::target_migratable<int>>);
+    EXPECT_TRUE((std::is_default_constructible_v<offload::target_migratable<int, modes::push_data>>));
+    EXPECT_TRUE((std::is_copy_constructible_v<offload::target_migratable<int, modes::push_data>>));
+    EXPECT_TRUE((std::is_move_constructible_v<offload::target_migratable<int, modes::push_data>>));
+
+    EXPECT_TRUE((std::is_default_constructible_v<offload::target_migratable<int, modes::pull_data>>));
+    EXPECT_TRUE((std::is_copy_constructible_v<offload::target_migratable<int, modes::pull_data>>));
+    EXPECT_TRUE((std::is_move_constructible_v<offload::target_migratable<int, modes::pull_data>>));
 }
 
 TEST(target_migratable, deconstructor)
 {
-    EXPECT_TRUE(std::is_destructible_v<offload::target_migratable<int>>);
+    EXPECT_TRUE((std::is_destructible_v<offload::target_migratable<int, modes::push_data>>));
+
+    EXPECT_TRUE((std::is_destructible_v<offload::target_migratable<int, modes::pull_data>>));
 }
 
 TEST(target_migratable, assignment)
 {
-    EXPECT_TRUE(std::is_copy_assignable_v<offload::target_migratable<int>>);
-    EXPECT_TRUE(std::is_move_assignable_v<offload::target_migratable<int>>);
+    EXPECT_TRUE((std::is_copy_assignable_v<offload::target_migratable<int, modes::push_data>>));
+    EXPECT_TRUE((std::is_move_assignable_v<offload::target_migratable<int, modes::push_data>>));
+
+    EXPECT_TRUE((std::is_copy_assignable_v<offload::target_migratable<int, modes::pull_data>>));
+    EXPECT_TRUE((std::is_move_assignable_v<offload::target_migratable<int, modes::pull_data>>));
 }
 
 TEST(default_target_migratable, serialise_and_deserialise)
 {
     offload::node_t node{1};
-    offload::target_migratable<int> migratable{node, 5}; // serialise
+    offload::target_migratable<int, modes::push_data> migratable{node, 5}; // serialise
     EXPECT_EQ(migratable_value(migratable), 5); // internal value
     EXPECT_EQ(static_cast<int>(migratable), 5); // deserialise
 }
 
-#include "target_migratable_cereal_types.hpp"
+#include "target_migratable_std_vector.hpp"
 
-bool test_transferred_std_vector(seqan3::offload::target_migratable<std::vector<int>> migratable, size_t size)
+seqan3::offload::target_migratable<std::vector<int>, modes::pull_data>
+test_transferred_std_vector
+(
+    seqan3::offload::target_migratable<std::vector<int>, modes::push_data> migratable,
+    size_t size
+)
 {
     using namespace seqan3::offload;
     std::vector<int> expect(size, 4);
 
     // did deserialise work
-    {
-        std::vector<int> result = migratable;
-        EXPECT_EQ(result, expect);
-    }
+    std::vector<int> result = migratable;
+    EXPECT_EQ(result, expect);
+
+    return result;
 }
 
 TEST(target_migratable, std_vector)
@@ -105,7 +120,7 @@ TEST(target_migratable, std_vector)
     EXPECT_EQ(vector.size(), size);
 
     node_t node{2};
-    target_migratable<vector_t> migratable{node, std::move(vector)};
+    target_migratable<vector_t, modes::push_data> migratable{node, std::move(vector)};
 
     target_migratable sized_buffer = migratable.data();
 
@@ -113,5 +128,7 @@ TEST(target_migratable, std_vector)
     EXPECT_NE(sized_buffer.data().get(), nullptr);
     EXPECT_GE(sized_buffer.size(), vector.size());
 
-    test::mpi_gtest<test_transferred_std_vector>(node, std::move(migratable), size);
+    vector_t result = test::mpi_gtest<test_transferred_std_vector>(node, std::move(migratable), size);
+    vector_t expect(size, 4);
+    EXPECT_EQ(result, expect);
 }

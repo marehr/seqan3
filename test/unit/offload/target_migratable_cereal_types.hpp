@@ -2,12 +2,11 @@
 
 #include <sstream>
 
-#include <seqan3/offload/target_migratable.hpp>
-
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
 
 #include <seqan3/offload/contiguous_container.hpp>
+#include <seqan3/offload/target_migratable.hpp>
 
 namespace seqan3::detail
 {
@@ -43,11 +42,11 @@ struct stringbuf_range
 namespace seqan3::offload
 {
 template<typename value_t>
-struct target_migratable<std::vector<value_t>>
+struct target_migratable<std::vector<value_t>, target_migratable_mode::push_data>
 {
     using char_t = typename std::ostringstream::char_type;
     using contiguous_container_t = contiguous_container<char_t>;
-    using migratable_t = target_migratable<contiguous_container_t>;
+    using migratable_t = target_migratable<contiguous_container_t, target_migratable_mode::push_data>;
     // using value_t = typename std::decay_t<contiguous_container_t>::value_type;
 
     target_migratable() = default;

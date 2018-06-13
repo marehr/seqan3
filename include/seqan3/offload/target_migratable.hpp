@@ -48,7 +48,13 @@
 namespace seqan3::offload
 {
 
-template<typename value_t, typename = void>
+enum struct target_migratable_mode
+{
+    push_data,
+    pull_data
+};
+
+template<typename value_t, target_migratable_mode mode, typename = void>
 struct target_migratable
 {
     // TODO: remove default constructor when result_container<> uses
@@ -61,8 +67,18 @@ struct target_migratable
     target_migratable& operator=(target_migratable&&) = default;
 
     // forward compatible arg into value_t's ctor
-    template<typename compatible_t>
+    template<typename compatible_t,
+             typename = typename std::enable_if_t<mode == target_migratable_mode::push_data>>
     target_migratable(node_t, compatible_t&& arg)
+        : value{std::forward<compatible_t>(arg)} // NOTE: compatible types are allowed
+    {
+        // std::cout << "default-target_migratable-ctor on " << ham::offload::this_node() << " -> " << target_node << ": "; detail::print(value); std::cout << std::endl;
+    }
+
+    // TODO: this should be an r-value constructor
+    template<typename compatible_t,
+             typename = typename std::enable_if_t<mode == target_migratable_mode::pull_data>>
+    target_migratable(compatible_t&& arg)
         : value{std::forward<compatible_t>(arg)} // NOTE: compatible types are allowed
     {
         // std::cout << "default-target_migratable-ctor on " << ham::offload::this_node() << " -> " << target_node << ": "; detail::print(value); std::cout << std::endl;
