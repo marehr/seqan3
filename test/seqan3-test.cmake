@@ -192,6 +192,40 @@ macro (seqan3_require_test)
     unset(gtest_path)
 endmacro ()
 
+function (extract_target_name target_cpp target_var test_target_var cpp_suffix)
+    # $target_cpp = "pod_tuple_test.cpp"
+    #   * will register the global TARGET name "pod_tuple_test" and
+    #   * will register the test case name "core_pod_tuple" if
+    #     pod_tuple_test.cpp is in test/core/
+    #
+    # NOTE(marehr): ".+/test/" REGEX is greedy, that means
+    # /test/test/test/hello_test.cpp will result in an empty `test_path`
+    if (ARGV4)
+        set(target_suffix "${ARGV4}")
+    else ()
+        string (REGEX REPLACE ".cpp$" "" target_suffix "${cpp_suffix}")
+    endif ()
+    message(STATUS "target_suffix: ${target_suffix}")
+    get_filename_component(target_filename "${target_cpp}" NAME)
+    message(STATUS "target_filename: " ${target_filename})
+    string (REGEX REPLACE "${cpp_suffix}$" "" target_name ${target_filename})
+    message(STATUS "target_name: " ${target_name})
+    # string (REGEX REPLACE ".+/test/" "" test_path ${CMAKE_CURRENT_LIST_DIR})
+    message(STATUS "CMAKE_CURRENT_LIST_DIR: " ${CMAKE_CURRENT_LIST_DIR})
+    message(STATUS "SEQAN3_CLONE_DIR: " "${SEQAN3_CLONE_DIR}/test")
+    file(RELATIVE_PATH test_target "${SEQAN3_CLONE_DIR}/test" ${target_cpp})
+    message(STATUS "test_target: " "${test_target}")
+
+    set (${target_var} "${target_name}${target_suffix}" PARENT_SCOPE)
+    set (${test_target_var} "${test_target}" PARENT_SCOPE)
+endfunction ()
+
+# ${target_var} = alphabet_test
+# ${test_target_var} = more/alphabet_test
+extract_target_name("/home/marehr/develope/seqan3/test/unit/alphabet/alphabet_test.cpp" target test_target "_test.cpp")
+message(STATUS "target: ${target}")
+message(STATUS "test_target: ${test_target}")
+
 macro (add_subdirectories)
     file (GLOB ENTRIES
           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
