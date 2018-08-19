@@ -206,3 +206,12 @@ structured_rna(sequence_alphabet_type &&, structure_alphabet_type &&)
     -> structured_rna<std::decay_t<sequence_alphabet_type>, std::decay_t<structure_alphabet_type>>;
 
 } // namespace seqan3
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+#include <seqan3/alphabet/nucleotide/dna4.hpp>
+#include <seqan3/alphabet/structure/dot_bracket3.hpp>
+
+extern template class seqan3::cartesian_composition<
+    seqan3::structured_rna<seqan3::rna4, seqan3::dot_bracket3>, seqan3::rna4, seqan3::dot_bracket3>;
+extern template class seqan3::structured_rna<seqan3::rna4, seqan3::dot_bracket3>;
+#endif

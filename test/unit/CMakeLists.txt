@@ -36,6 +36,11 @@ project (seqan3_test_unit CXX)
 
 include (../seqan3-test.cmake)
 
+add_library(seqan3_alphabet SHARED "${SEQAN3_CLONE_DIR}/src/alphabet.cpp")
+target_link_libraries(seqan3_alphabet seqan3::seqan3)
+
+target_compile_definitions(seqan3::test::unit INTERFACE -DSEQAN3_AS_LIBRARY=1)
+
 macro (seqan3_test target_cpp)
     # $target_cpp = "pod_tuple_test.cpp"
     #   * will register the global TARGET name "pod_tuple_test" and
@@ -49,7 +54,7 @@ macro (seqan3_test target_cpp)
     set (target "${target_name}_test")
 
     add_executable (${target} ${target_cpp})
-    target_link_libraries (${target} seqan3::test::unit)
+    target_link_libraries (${target} seqan3::test::unit seqan3_alphabet)
     add_test (NAME "${test_path}/${target}" COMMAND ${target})
 
     unset (target_name)

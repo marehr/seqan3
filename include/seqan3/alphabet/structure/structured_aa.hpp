@@ -146,3 +146,9 @@ structured_aa(sequence_alphabet_type &&, structure_alphabet_type &&)
     -> structured_aa<std::decay_t<sequence_alphabet_type>, std::decay_t<structure_alphabet_type>>;
 
 } // namespace seqan3
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+extern template class seqan3::cartesian_composition<
+    seqan3::structured_aa<seqan3::aa27, seqan3::dssp9>,seqan3::aa27, seqan3::dssp9>;
+extern template class seqan3::structured_aa<seqan3::aa27, seqan3::dssp9>;
+#endif

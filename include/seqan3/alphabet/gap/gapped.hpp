@@ -42,6 +42,7 @@
 
 #include <seqan3/alphabet/gap/gap.hpp>
 #include <seqan3/alphabet/composition/union_composition.hpp>
+#include <seqan3/core/seqan3_api.hpp>
 
 namespace seqan3
 {
@@ -105,3 +106,23 @@ struct gapped : public union_composition<alphabet_t, gap>
 };
 
 } // namespace seqan3
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+#include <seqan3/alphabet/nucleotide/all.hpp>
+
+namespace seqan3
+{
+extern template class gapped<dna4>;
+extern template class union_composition<dna4, gap>;
+extern template class gapped<dna5>;
+extern template class union_composition<dna5, gap>;
+extern template class gapped<dna15>;
+extern template class union_composition<dna15,gap>;
+extern template class gapped<rna4>;
+extern template class union_composition<rna4, gap>;
+extern template class gapped<rna5>;
+extern template class union_composition<rna5, gap>;
+extern template class gapped<rna15>;
+extern template class union_composition<rna15,gap>;
+} // namespace seqan3
+#endif

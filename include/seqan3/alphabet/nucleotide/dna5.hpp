@@ -46,6 +46,7 @@
 
 #include <seqan3/alphabet/detail/convert.hpp>
 #include <seqan3/alphabet/nucleotide/concept.hpp>
+#include <seqan3/core/seqan3_api.hpp>
 
 // ------------------------------------------------------------------
 // dna5
@@ -318,15 +319,21 @@ namespace seqan3::literal
  * All seqan3 literals are in the namespace seqan3::literal!
  */
 
-inline dna5_vector operator""_dna5(const char * s, std::size_t n)
-{
-    dna5_vector r;
-    r.resize(n);
-
-    for (size_t i = 0; i < n; ++i)
-        r[i].assign_char(s[i]);
-
-    return r;
-}
+SEQAN3_API dna5_vector operator""_dna5(const char * s, std::size_t n);
 
 } // namespace seqan3::literal
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+extern template class std::vector<seqan3::dna5>;
+extern template std::ostream & seqan3::operator<< <seqan3::dna5>(std::ostream & os, seqan3::dna5 const alph);
+extern template char seqan3::to_char<seqan3::dna5>(seqan3::dna5 const alph);
+extern template uint8_t seqan3::to_rank<seqan3::dna5>(seqan3::dna5 const alph);
+extern template seqan3::dna5 & seqan3::assign_char<seqan3::dna5>(seqan3::dna5 & alph, char const chr);
+extern template seqan3::dna5 && seqan3::assign_char<seqan3::dna5>(seqan3::dna5 && alph, char const chr);
+extern template seqan3::dna5 & seqan3::assign_rank<seqan3::dna5>(seqan3::dna5 & alph, uint8_t const chr);
+extern template seqan3::dna5 && seqan3::assign_rank<seqan3::dna5>(seqan3::dna5 && alph, uint8_t const chr);
+#endif
+
+#ifndef SEQAN3_AS_LIBRARY // header only per default
+#include "dna5.tcc"
+#endif

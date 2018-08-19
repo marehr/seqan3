@@ -43,6 +43,7 @@
 #include <vector>
 
 #include <seqan3/alphabet/structure/rna_structure_concept.hpp>
+#include <seqan3/core/seqan3_api.hpp>
 
 // ------------------------------------------------------------------
 // dot_bracket3
@@ -291,15 +292,21 @@ namespace seqan3::literal
  * \attention
  * All seqan3 literals are in the namespace seqan3::literal!
  */
-inline std::vector<dot_bracket3> operator""_db3(const char * str, std::size_t len)
-{
-    std::vector<dot_bracket3> vec;
-    vec.resize(len);
-
-    for (size_t idx = 0u; idx < len; ++idx)
-        vec[idx].assign_char(str[idx]);
-
-    return vec;
-}
+SEQAN3_API std::vector<dot_bracket3> operator""_db3(const char * str, std::size_t len);
 
 } // namespace seqan3::literal
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+extern template class std::vector<seqan3::dot_bracket3>;
+extern template std::ostream & seqan3::operator<< <seqan3::dot_bracket3>(std::ostream & os, seqan3::dot_bracket3 const alph);
+extern template char seqan3::to_char<seqan3::dot_bracket3>(seqan3::dot_bracket3 const alph);
+extern template uint8_t seqan3::to_rank<seqan3::dot_bracket3>(seqan3::dot_bracket3 const alph);
+extern template seqan3::dot_bracket3 & seqan3::assign_char<seqan3::dot_bracket3>(seqan3::dot_bracket3 & alph, char const chr);
+extern template seqan3::dot_bracket3 && seqan3::assign_char<seqan3::dot_bracket3>(seqan3::dot_bracket3 && alph, char const chr);
+extern template seqan3::dot_bracket3 & seqan3::assign_rank<seqan3::dot_bracket3>(seqan3::dot_bracket3 & alph, uint8_t const chr);
+extern template seqan3::dot_bracket3 && seqan3::assign_rank<seqan3::dot_bracket3>(seqan3::dot_bracket3 && alph, uint8_t const chr);
+#endif
+
+#ifndef SEQAN3_AS_LIBRARY // header only per default
+#include "dot_bracket3.tcc"
+#endif

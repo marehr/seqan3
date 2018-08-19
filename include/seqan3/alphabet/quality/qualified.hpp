@@ -368,3 +368,27 @@ qualified(sequence_alphabet_type &&, quality_alphabet_type &&)
     -> qualified<std::decay_t<sequence_alphabet_type>, std::decay_t<quality_alphabet_type>>;
 
 } // namespace seqan3
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+#include <seqan3/alphabet/nucleotide/all.hpp>
+
+#include <seqan3/alphabet/quality/phred42.hpp>
+// #include <seqan3/alphabet/quality/phred63.hpp>
+// #include <seqan3/alphabet/quality/phred68legacy.hpp>
+
+namespace seqan3
+{
+extern template class cartesian_composition<qualified<dna4, phred42>, dna4, phred42>;
+extern template class qualified<dna4, phred42>;
+extern template class cartesian_composition<qualified<dna5, phred42>, dna5, phred42>;
+extern template class qualified<dna5, phred42>;
+extern template class cartesian_composition<qualified<dna15, phred42>, dna15, phred42>;
+extern template class qualified<dna15, phred42>;
+extern template class cartesian_composition<qualified<rna4, phred42>, rna4, phred42>;
+extern template class qualified<rna4, phred42>;
+extern template class cartesian_composition<qualified<rna5, phred42>, rna5, phred42>;
+extern template class qualified<rna5, phred42>;
+extern template class cartesian_composition<qualified<rna15, phred42>, rna15, phred42>;
+extern template class qualified<rna15, phred42>;
+}
+#endif

@@ -46,6 +46,7 @@
 #include <seqan3/alphabet/detail/convert.hpp>
 #include <seqan3/alphabet/nucleotide/concept.hpp>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/core/seqan3_api.hpp>
 
 // ------------------------------------------------------------------
 // rna5
@@ -217,15 +218,21 @@ namespace seqan3::literal
  * All seqan3 literals are in the namespace seqan3::literal!
  */
 
-inline rna5_vector operator""_rna5(const char * s, std::size_t n)
-{
-    rna5_vector r;
-    r.resize(n);
-
-    for (size_t i = 0; i < n; ++i)
-        r[i].assign_char(s[i]);
-
-    return r;
-}
+SEQAN3_API rna5_vector operator""_rna5(const char * s, std::size_t n);
 
 } // namespace seqan3::literal
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+extern template class std::vector<seqan3::rna5>;
+extern template std::ostream & seqan3::operator<< <seqan3::rna5>(std::ostream & os, seqan3::rna5 const alph);
+extern template char seqan3::to_char<seqan3::rna5>(seqan3::rna5 const alph);
+extern template uint8_t seqan3::to_rank<seqan3::rna5>(seqan3::rna5 const alph);
+extern template seqan3::rna5 & seqan3::assign_char<seqan3::rna5>(seqan3::rna5 & alph, char const chr);
+extern template seqan3::rna5 && seqan3::assign_char<seqan3::rna5>(seqan3::rna5 && alph, char const chr);
+extern template seqan3::rna5 & seqan3::assign_rank<seqan3::rna5>(seqan3::rna5 & alph, uint8_t const chr);
+extern template seqan3::rna5 && seqan3::assign_rank<seqan3::rna5>(seqan3::rna5 && alph, uint8_t const chr);
+#endif
+
+#ifndef SEQAN3_AS_LIBRARY
+#include "rna5.tcc"
+#endif

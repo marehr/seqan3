@@ -43,6 +43,7 @@
 #include <vector>
 
 #include <seqan3/alphabet/concept.hpp>
+#include <seqan3/core/seqan3_api.hpp>
 
 // ------------------------------------------------------------------
 // dssp9
@@ -276,15 +277,21 @@ namespace seqan3::literal
  * \attention
  * All seqan3 literals are in the namespace seqan3::literal!
  */
-inline std::vector<dssp9> operator""_dssp9(const char * str, std::size_t len)
-{
-    std::vector<dssp9> vec;
-    vec.resize(len);
-
-    for (size_t idx = 0u; idx < len; ++idx)
-        vec[idx].assign_char(str[idx]);
-
-    return vec;
-}
+SEQAN3_API std::vector<dssp9> operator""_dssp9(const char * str, std::size_t len);
 
 } // namespace seqan3::literal
+
+#ifdef SEQAN3_EXTERN_TEMPLATE
+extern template class std::vector<seqan3::dssp9>;
+extern template std::ostream & seqan3::operator<< <seqan3::dssp9>(std::ostream & os, seqan3::dssp9 const alph);
+extern template char seqan3::to_char<seqan3::dssp9>(seqan3::dssp9 const alph);
+extern template uint8_t seqan3::to_rank<seqan3::dssp9>(seqan3::dssp9 const alph);
+extern template seqan3::dssp9 & seqan3::assign_char<seqan3::dssp9>(seqan3::dssp9 & alph, char const chr);
+extern template seqan3::dssp9 && seqan3::assign_char<seqan3::dssp9>(seqan3::dssp9 && alph, char const chr);
+extern template seqan3::dssp9 & seqan3::assign_rank<seqan3::dssp9>(seqan3::dssp9 & alph, uint8_t const chr);
+extern template seqan3::dssp9 && seqan3::assign_rank<seqan3::dssp9>(seqan3::dssp9 && alph, uint8_t const chr);
+#endif
+
+#ifndef SEQAN3_AS_LIBRARY // header only per default
+#include "dssp9.tcc"
+#endif
