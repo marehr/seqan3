@@ -34,6 +34,7 @@ template dna4 & assign_char<dna4>(dna4 & alph, char const chr);
 template dna4 && assign_char<dna4>(dna4 && alph, char const chr);
 template dna4 & assign_rank<dna4>(dna4 & alph, uint8_t const chr);
 template dna4 && assign_rank<dna4>(dna4 && alph, uint8_t const chr);
+template dna4 complement<dna4>(dna4 const alph);
 
 template std::ostream & operator<< <dna5>(std::ostream & os, dna5 const alph);
 template char to_char<dna5>(dna5 const alph);
@@ -42,6 +43,7 @@ template dna5 & assign_char<dna5>(dna5 & alph, char const chr);
 template dna5 && assign_char<dna5>(dna5 && alph, char const chr);
 template dna5 & assign_rank<dna5>(dna5 & alph, uint8_t const chr);
 template dna5 && assign_rank<dna5>(dna5 && alph, uint8_t const chr);
+template dna5 complement<dna5>(dna5 const alph);
 
 template std::ostream & operator<< <dna15>(std::ostream & os, dna15 const alph);
 template char to_char<dna15>(dna15 const alph);
@@ -50,6 +52,7 @@ template dna15 & assign_char<dna15>(dna15 & alph, char const chr);
 template dna15 && assign_char<dna15>(dna15 && alph, char const chr);
 template dna15 & assign_rank<dna15>(dna15 & alph, uint8_t const chr);
 template dna15 && assign_rank<dna15>(dna15 && alph, uint8_t const chr);
+template dna15 complement<dna15>(dna15 const alph);
 
 template std::ostream & operator<< <rna4>(std::ostream & os, rna4 const alph);
 template char to_char<rna4>(rna4 const alph);
@@ -58,6 +61,7 @@ template rna4 & assign_char<rna4>(rna4 & alph, char const chr);
 template rna4 && assign_char<rna4>(rna4 && alph, char const chr);
 template rna4 & assign_rank<rna4>(rna4 & alph, uint8_t const chr);
 template rna4 && assign_rank<rna4>(rna4 && alph, uint8_t const chr);
+template rna4 complement<rna4>(rna4 const alph);
 
 template std::ostream & operator<< <rna5>(std::ostream & os, rna5 const alph);
 template char to_char<rna5>(rna5 const alph);
@@ -66,6 +70,7 @@ template rna5 & assign_char<rna5>(rna5 & alph, char const chr);
 template rna5 && assign_char<rna5>(rna5 && alph, char const chr);
 template rna5 & assign_rank<rna5>(rna5 & alph, uint8_t const chr);
 template rna5 && assign_rank<rna5>(rna5 && alph, uint8_t const chr);
+template rna5 complement<rna5>(rna5 const alph);
 
 template std::ostream & operator<< <rna15>(std::ostream & os, rna15 const alph);
 template char to_char<rna15>(rna15 const alph);
@@ -74,6 +79,7 @@ template rna15 & assign_char<rna15>(rna15 & alph, char const chr);
 template rna15 && assign_char<rna15>(rna15 && alph, char const chr);
 template rna15 & assign_rank<rna15>(rna15 & alph, uint8_t const chr);
 template rna15 && assign_rank<rna15>(rna15 && alph, uint8_t const chr);
+template rna15 complement<rna15>(rna15 const alph);
 
 template std::ostream & operator<< <aa20>(std::ostream & os, aa20 const alph);
 template char to_char<aa20>(aa20 const alph);
@@ -99,6 +105,8 @@ template dot_bracket3 && assign_char<dot_bracket3>(dot_bracket3 && alph, char co
 template dot_bracket3 & assign_rank<dot_bracket3>(dot_bracket3 & alph, uint8_t const chr);
 template dot_bracket3 && assign_rank<dot_bracket3>(dot_bracket3 && alph, uint8_t const chr);
 
+template class seqan3::wuss<51>;
+
 template std::ostream & operator<< <wuss51>(std::ostream & os, wuss51 const alph);
 template char to_char<wuss51>(wuss51 const alph);
 template uint8_t to_rank<wuss51>(wuss51 const alph);
@@ -114,8 +122,6 @@ template dssp9 & assign_char<dssp9>(dssp9 & alph, char const chr);
 template dssp9 && assign_char<dssp9>(dssp9 && alph, char const chr);
 template dssp9 & assign_rank<dssp9>(dssp9 & alph, uint8_t const chr);
 template dssp9 && assign_rank<dssp9>(dssp9 && alph, uint8_t const chr);
-
-template class seqan3::wuss<51>;
 
 template class union_composition<dna4, gap>;
 template class gapped<dna4>;

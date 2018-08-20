@@ -228,6 +228,7 @@ extern template seqan3::rna4 & seqan3::assign_char<seqan3::rna4>(seqan3::rna4 & 
 extern template seqan3::rna4 && seqan3::assign_char<seqan3::rna4>(seqan3::rna4 && alph, char const chr);
 extern template seqan3::rna4 & seqan3::assign_rank<seqan3::rna4>(seqan3::rna4 & alph, uint8_t const chr);
 extern template seqan3::rna4 && seqan3::assign_rank<seqan3::rna4>(seqan3::rna4 && alph, uint8_t const chr);
+extern template seqan3::rna4 seqan3::complement<seqan3::rna4>(seqan3::rna4 const alph);
 #endif
 
 #ifndef SEQAN3_AS_LIBRARY
