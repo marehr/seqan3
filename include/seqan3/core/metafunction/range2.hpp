@@ -7,7 +7,7 @@ namespace seqan3
  */
 template <typename t>
 //!\cond
-    requires std::is_same_v<t, void>
+    requires std::is_same_v<t, void>;
 //!\endcond
 struct innermost_value_type
 {
