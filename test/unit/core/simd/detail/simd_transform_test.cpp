@@ -17,19 +17,19 @@
 
 using namespace seqan3;
 
-template <typename simd_t>
-simd_t transform_iota(int offset)
+template <typename simd_type>
+simd_type transform_iota(int offset)
 {
-    return detail::simd_transform<simd_t>([offset] (size_t const i)
+    return detail::simd_transform<simd_type>([offset] (size_t i)
     {
         return offset + i;
     });
 }
 
-template <simd_concept simd_t>
-constexpr simd_t transform_iota_constexpr(int offset)
+template <typename simd_type>
+constexpr simd_type transform_iota_constexpr(int offset)
 {
-    return detail::simd_transform_constexpr<simd_t>([offset] (size_t const i)
+    return detail::simd_transform_constexpr<simd_type>([offset] (size_t i)
     {
         return offset + i;
     });
@@ -56,7 +56,7 @@ TEST(simd_transform_constexpr, unary_add)
     constexpr size_t length = simd_traits<simd_type>::length;
 
     constexpr simd_type four_iota = transform_iota_constexpr<simd_type>(4);
-    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([] (size_t, auto four_iota_i)
+    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([](size_t, auto four_iota_i)
     {
         return four_iota_i + 6;
     }, four_iota);
@@ -75,7 +75,7 @@ TEST(simd_transform_constexpr, binary_multiply)
 
     constexpr simd_type four_iota = transform_iota_constexpr<simd_type>(4);
     constexpr simd_type two_iota = transform_iota_constexpr<simd_type>(2);
-    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([] (size_t, auto four_iota_i, auto two_iota_i)
+    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([](size_t, auto four_iota_i, auto two_iota_i)
     {
         return four_iota_i * two_iota_i;
     }, four_iota, two_iota);
@@ -100,7 +100,7 @@ TEST(simd_transform_constexpr, ternary_blend)
         return (i % 3);
     });
 
-    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([] (size_t, auto four_iota_i, auto two_iota_i, auto mask_i)
+    constexpr simd_type result = detail::simd_transform_constexpr<simd_type>([](size_t, auto four_iota_i, auto two_iota_i, auto mask_i)
     {
         return mask_i ? four_iota_i : two_iota_i;
     }, four_iota, two_iota, mask);
@@ -132,7 +132,7 @@ TEST(simd_transform, unary_add)
     constexpr size_t length = simd_traits<simd_type>::length;
 
     simd_type four_iota = transform_iota<simd_type>(4);
-    simd_type result = detail::simd_transform<simd_type>([] (size_t, auto four_iota_i)
+    simd_type result = detail::simd_transform<simd_type>([](size_t, auto four_iota_i)
     {
         return four_iota_i + 6;
     }, four_iota);
@@ -151,7 +151,7 @@ TEST(simd_transform, binary_multiply)
 
     simd_type four_iota = transform_iota<simd_type>(4);
     simd_type two_iota = transform_iota<simd_type>(2);
-    simd_type result = detail::simd_transform<simd_type>([] (size_t, auto four_iota_i, auto two_iota_i)
+    simd_type result = detail::simd_transform<simd_type>([](size_t, auto four_iota_i, auto two_iota_i)
     {
         return four_iota_i * two_iota_i;
     }, four_iota, two_iota);
@@ -176,7 +176,7 @@ TEST(simd_transform, ternary_blend)
         return (i % 3);
     });
 
-    simd_type result = detail::simd_transform<simd_type>([] (size_t, auto four_iota_i, auto two_iota_i, auto mask_i)
+    simd_type result = detail::simd_transform<simd_type>([](size_t, auto four_iota_i, auto two_iota_i, auto mask_i)
     {
         return mask_i ? four_iota_i : two_iota_i;
     }, four_iota, two_iota, mask);
