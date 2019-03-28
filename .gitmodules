@@ -12,4 +12,4 @@
 	url = https://github.com/seqan/lemon
 [submodule "ham"]
 	path = submodules/ham
-	url = https://github.com/noma/ham.git
+	url = https://github.com/marehr/ham.git
