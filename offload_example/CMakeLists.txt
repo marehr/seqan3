@@ -8,6 +8,9 @@ find_package (SeqAn3)
 add_executable(sum_serial sum_serial.cpp)
 target_link_libraries (sum_serial seqan3::seqan3)
 
+add_executable(sum_thread sum_thread.cpp)
+target_link_libraries (sum_thread seqan3::seqan3)
+
 add_executable(sum_simd sum_simd.cpp)
 target_link_libraries (sum_simd seqan3::seqan3)
 target_compile_options (sum_simd PUBLIC -march=native)
