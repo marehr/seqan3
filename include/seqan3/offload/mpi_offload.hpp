@@ -89,7 +89,10 @@ protected:
         auto twoway_execute(offload::function<fn_ptr> function) const
         {
             offload::node_t target_node{offloader->next_node()};
-            return ham::offload::async(target_node, function);
+            auto data = std::tuple_cat(std::tuple{target_node}, std::move(function.data()));
+            auto target_function = std::make_from_tuple<offload::target_function<fn_ptr>>(std::move(data));
+
+            return target_function.async();
         }
 
         template<auto fn_ptr>
@@ -117,8 +120,9 @@ public:
     {
         if ((unsigned)nodes > offload::num_nodes())
             nodes = (int)offload::num_nodes();
-        std::cout << "nodes: " << nodes << std::endl;
+        // std::cout << "nodes: " << nodes << std::endl;
 
+        this->nodes = nodes;
         current_node = nodes;
     }
 

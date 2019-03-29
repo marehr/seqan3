@@ -42,13 +42,15 @@
 #define HAM_COMM_MPI 1
 #include <ham/offload.hpp>
 
+#include "function.hpp"
+
 namespace seqan3::offload
 {
 
 using node_t = ham::offload::node_t;
 
-template <auto fn_ptr>
-using function = ham::function<decltype(fn_ptr), fn_ptr>;
+// template <auto fn_ptr>
+// using function = ham::function<decltype(fn_ptr), fn_ptr>;
 
 using ham::offload::this_node;
 using ham::offload::num_nodes;
