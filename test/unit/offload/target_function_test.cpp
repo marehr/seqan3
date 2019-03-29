@@ -170,6 +170,7 @@ TEST(accumulate_buffer_ptr, remote_execution)
 template <typename range_t>
 auto accumulate(range_t numbers)
 {
+    std::cout << "numbers: " << numbers.size() << std::endl;
     return std::accumulate(numbers.begin(), numbers.end(), 0);
 }
 
@@ -188,10 +189,14 @@ using offload_accumulate_types = ::testing::Types <
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10>>,
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10> const &>,
     std::tuple<std::integral_constant<int, 10>, std::array<int, 10> &&>,
-    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int>>,
-    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int> const &>,
-    std::tuple<std::integral_constant<int, 10000000>, seqan3::offload::contiguous_container<int> &&>
+    std::tuple<std::integral_constant<int, 100>, seqan3::offload::contiguous_container<int>>,
+    std::tuple<std::integral_constant<int, 100>, seqan3::offload::contiguous_container<int> const &>,
+    std::tuple<std::integral_constant<int, 100>, seqan3::offload::contiguous_container<int> &&>,
+    std::tuple<std::integral_constant<int, 100>, std::vector<int>>
 >;
+
+#include <seqan3/offload/serialise/vector.hpp>
+// #include "target_migratable_std_vector.hpp"
 
 TYPED_TEST_CASE(offload_accumulate, offload_accumulate_types);
 
@@ -224,8 +229,12 @@ TYPED_TEST(offload_accumulate, remote_execution)
 
     offload::node_t target = 2;
 
+    debug_stream << "size: " << size << std::endl;
     std::decay_t<range_t> numbers{size};
+    if constexpr (std::is_same_v<range_t, std::vector<int>>)
+        numbers.resize(size);
     std::for_each(numbers.begin(), numbers.end(), [](int &i){ i = 2; });
+    debug_stream << "numbers: " << numbers << std::endl;
 
     int result = target_function_t{target, std::move(numbers)}.async().get();
     EXPECT_EQ(result, 2 * size);

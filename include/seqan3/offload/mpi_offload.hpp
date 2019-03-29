@@ -88,14 +88,15 @@ protected:
         template<auto fn_ptr>
         auto twoway_execute(offload::function<fn_ptr> function) const
         {
-            offload::node_t target_node{1};
+            offload::node_t target_node{offloader->next_node()};
             return ham::offload::async(target_node, function);
         }
 
         template<auto fn_ptr>
         auto twoway_execute(offload::target_function<fn_ptr> function) const
         {
-            return ham::offload::async(function.node, function);
+            // return ham::offload::async(function.node, function);
+            return function.async();
         }
 
         template<class Function>
@@ -112,7 +113,14 @@ protected:
 public:
     using executor_type = executor_impl<execution::possibly_blocking_t>;
 
-    mpi_offload() = default;
+    mpi_offload(size_t nodes = offload::num_nodes())
+    {
+        if ((unsigned)nodes > offload::num_nodes())
+            nodes = (int)offload::num_nodes();
+        std::cout << "nodes: " << nodes << std::endl;
+
+        current_node = nodes;
+    }
 
     mpi_offload(const mpi_offload &) = delete;
     mpi_offload& operator=(const mpi_offload &) = delete;
@@ -127,7 +135,16 @@ public:
         return executor_type{this};
     }
 
-    size_t nodes{};
+private:
+    seqan3::offload::node_t nodes{};
+    seqan3::offload::node_t current_node{};
+
+    seqan3::offload::node_t next_node()
+    {
+        if (++current_node >= nodes)
+            current_node = 1u;
+        return current_node;
+    }
 };
 
 } // seqan3

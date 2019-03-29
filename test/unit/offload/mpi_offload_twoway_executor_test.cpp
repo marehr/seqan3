@@ -83,7 +83,7 @@ TEST(twoway_executor, functions_with_no_offload)
 
 TEST(twoway_executor, offload_functions_with_basic_types)
 {
-    mpi_offload mpi_offloader{1};
+    mpi_offload mpi_offloader{};
     auto mpi_ex = mpi_offloader.executor();
 
     int x = 15;

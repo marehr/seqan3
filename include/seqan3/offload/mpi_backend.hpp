@@ -50,4 +50,8 @@ using node_t = ham::offload::node_t;
 template <auto fn_ptr>
 using function = ham::function<decltype(fn_ptr), fn_ptr>;
 
+using ham::offload::this_node;
+using ham::offload::num_nodes;
+using ham::offload::is_host;
+
 } // seqan3::offload

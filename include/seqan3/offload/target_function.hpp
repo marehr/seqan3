@@ -73,7 +73,9 @@ public:
     template<typename... args_t>
     target_function(node_t target_node_, args_t&&... arguments)
         : target_node{target_node_}, args{{target_node_, std::forward<args_t>(arguments)}...}
-    { }
+    {
+        assert(target_node_ > 0); // offloading to host makes no sense
+    }
 
     ham::offload::future<result_type> async()
     {

@@ -597,6 +597,20 @@ add_library (seqan3::seqan3 ALIAS seqan3_seqan3)
 # propagate SEQAN3_INCLUDE_DIR into SEQAN3_INCLUDE_DIRS
 set (SEQAN3_INCLUDE_DIRS ${SEQAN3_INCLUDE_DIR} ${SEQAN3_DEPENDENCY_INCLUDE_DIRS})
 
+# MPI
+set(HAM_CLONE_DIR "${SEQAN3_CLONE_DIR}/submodules/ham")
+add_subdirectory (${HAM_CLONE_DIR} ${CMAKE_BINARY_DIR}/submodules/ham)
+
+# ham's standard requirement for c++11 conflicts with seqan's requirement for >=c++17
+# See related problems
+# https://gitlab.kitware.com/cmake/cmake/issues/17146
+# https://gitlab.kitware.com/cmake/cmake/issues/16608
+set_property(TARGET ham_interface PROPERTY INTERFACE_COMPILE_FEATURES "")
+
+add_library(seqan3_mpi_app INTERFACE)
+target_link_libraries (seqan3_mpi_app INTERFACE ham_offload_mpi)
+add_library (seqan3::mpi_app ALIAS seqan3_mpi_app)
+
 if (SEQAN3_FIND_DEBUG)
   message ("Result for ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt")
   message ("")

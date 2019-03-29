@@ -3,14 +3,14 @@ find_package(MPI REQUIRED)
 find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
 
 # Import ham_offload_mpi
-set(HAM_CLONE_DIR "${SEQAN3_CLONE_DIR}/submodules/ham")
-add_subdirectory (${HAM_CLONE_DIR} ${CMAKE_BINARY_DIR}/submodules/ham)
-
-# ham's standard requirement for c++11 conflicts with seqan's requirement for >=c++17
-# See related problems
-# https://gitlab.kitware.com/cmake/cmake/issues/17146
-# https://gitlab.kitware.com/cmake/cmake/issues/16608
-set_property(TARGET ham_interface PROPERTY INTERFACE_COMPILE_FEATURES "")
+# set(HAM_CLONE_DIR "${SEQAN3_CLONE_DIR}/submodules/ham")
+# add_subdirectory (${HAM_CLONE_DIR} ${CMAKE_BINARY_DIR}/submodules/ham)
+#
+# # ham's standard requirement for c++11 conflicts with seqan's requirement for >=c++17
+# # See related problems
+# # https://gitlab.kitware.com/cmake/cmake/issues/17146
+# # https://gitlab.kitware.com/cmake/cmake/issues/16608
+# set_property(TARGET ham_interface PROPERTY INTERFACE_COMPILE_FEATURES "")
 
 add_library(gtest_main_mpi STATIC gtest_main_mpi.cpp)
 # target_include_directories (gtest_main_mpi PRIVATE ${SEQAN3_INCLUDE_DIRS} ${SEQAN3_TEST_INCLUDE_DIRS})
