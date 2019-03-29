@@ -46,9 +46,9 @@ TEST(mpi_offload_executor, default_executor)
     mpi_offload mpi_offloader{1};
 
     mpi_offload::executor_type ex = mpi_offloader.executor();
-    EXPECT_TRUE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, prefer_never_blocking)
@@ -56,11 +56,11 @@ TEST(mpi_offload_executor, prefer_never_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::prefer(mpi_offloader.executor(),
-                                execution::never_blocking_t{});
+                                execution::blocking_t::never_t{});
 
-    EXPECT_FALSE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_TRUE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, prefer_always_blocking)
@@ -68,11 +68,11 @@ TEST(mpi_offload_executor, prefer_always_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::prefer(mpi_offloader.executor(),
-                                execution::always_blocking_t{});
+                                execution::blocking_t::always_t{});
 
-    EXPECT_FALSE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_TRUE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, prefer_possibly_blocking)
@@ -80,11 +80,11 @@ TEST(mpi_offload_executor, prefer_possibly_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::prefer(mpi_offloader.executor(),
-                                execution::possibly_blocking_t{});
+                                execution::blocking_t::possibly_t{});
 
-    EXPECT_TRUE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, require_never_blocking)
@@ -92,11 +92,11 @@ TEST(mpi_offload_executor, require_never_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::require(mpi_offloader.executor(),
-                                 execution::never_blocking_t{});
+                                 execution::blocking_t::never_t{});
 
-    EXPECT_FALSE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_TRUE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, require_always_blocking)
@@ -104,11 +104,11 @@ TEST(mpi_offload_executor, require_always_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::require(mpi_offloader.executor(),
-                                 execution::always_blocking_t{});
+                                 execution::blocking_t::always_t{});
 
-    EXPECT_FALSE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_TRUE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::always_t{})));
 }
 
 TEST(mpi_offload_executor, require_possibly_blocking)
@@ -116,9 +116,9 @@ TEST(mpi_offload_executor, require_possibly_blocking)
     mpi_offload mpi_offloader{1};
 
     auto ex = execution::require(mpi_offloader.executor(),
-                                 execution::possibly_blocking_t{});
+                                 execution::blocking_t::possibly_t{});
 
-    EXPECT_TRUE((execution::query(ex, execution::possibly_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::never_blocking_t{})));
-    EXPECT_FALSE((execution::query(ex, execution::always_blocking_t{})));
+    EXPECT_TRUE((execution::query(ex, execution::blocking_t::possibly_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::never_t{})));
+    EXPECT_FALSE((execution::query(ex, execution::blocking_t::always_t{})));
 }

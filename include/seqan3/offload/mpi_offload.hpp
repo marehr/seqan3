@@ -66,11 +66,11 @@ protected:
         template <typename property_t>
         constexpr auto require(property_t) const noexcept
         {
-            if constexpr(std::is_same_v<property_t, execution::never_blocking_t>)
+            if constexpr(std::is_same_v<property_t, execution::blocking_t::never_t>)
                 return executor_impl<property_t>{};
-            else if constexpr(std::is_same_v<property_t, execution::possibly_blocking_t>)
+            else if constexpr(std::is_same_v<property_t, execution::blocking_t::possibly_t>)
                 return executor_impl<property_t>{};
-            else if constexpr(std::is_same_v<property_t, execution::always_blocking_t>)
+            else if constexpr(std::is_same_v<property_t, execution::blocking_t::always_t>)
                 return executor_impl<property_t>{};
         }
 
@@ -80,9 +80,9 @@ protected:
         template <typename property_t>
         constexpr bool query(property_t) const noexcept
         {
-            return all_same_v<execution::never_blocking_t, property_t, blocking_t> ||
-                   all_same_v<execution::always_blocking_t, property_t, blocking_t> ||
-                   all_same_v<execution::possibly_blocking_t, property_t, blocking_t>;
+            return all_same_v<execution::blocking_t::never_t, property_t, blocking_t> ||
+                   all_same_v<execution::blocking_t::always_t, property_t, blocking_t> ||
+                   all_same_v<execution::blocking_t::possibly_t, property_t, blocking_t>;
         }
 
         template<auto fn_ptr>
@@ -111,7 +111,7 @@ protected:
         }
     };
 public:
-    using executor_type = executor_impl<execution::possibly_blocking_t>;
+    using executor_type = executor_impl<execution::blocking_t::possibly_t>;
 
     mpi_offload(size_t nodes = offload::num_nodes())
     {
