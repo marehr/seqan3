@@ -156,6 +156,40 @@ constexpr simd_t iota(typename simd_traits<simd_t>::scalar_type const offset)
     });
 }
 
+template <simd_concept simd_t>
+constexpr simd_t blend(typename simd_traits<simd_t>::mask_type const & m, simd_t const & a, simd_t const & b)
+{
+    return m ? a : b;
+}
+
+template <simd_concept simd_t>
+constexpr simd_t max(simd_t const & a, simd_t const & b)
+{
+    return blend(a > b, a, b);
+}
+
+template <simd_concept simd_t>
+constexpr simd_t min(simd_t const & a, simd_t const & b)
+{
+    return blend(a < b, a, b);
+}
+
+template <typename scalar_t, simd_concept simd_t>
+constexpr void store(scalar_t * const memory, simd_t const & a)
+{
+    for (size_t i = 0; i < simd_traits<simd_t>::length; ++i)
+        memory[i] = a[i];
+}
+
+template <simd_concept simd_t, typename scalar_t>
+constexpr simd_t load(scalar_t const * const memory)
+{
+    simd_t output{};
+    for (size_t i = 0; i < simd_traits<simd_t>::length; ++i)
+        output[i] = memory[i];
+    return output;
+}
+
 } // inline namespace simd
 
 } // namespace seqan3
