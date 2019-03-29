@@ -1,9 +1,12 @@
 #pragma once
 
-int sum_serial(std::vector<int> numbers)
+#include <vector>
+#include <seqan3/std/span>
+
+int sum_serial(std::span<int const> numbers)
 {
     int sum = 0;
-    for (auto && k : numbers)
+    for (int const k : numbers)
         sum += k;
     return sum;
 }

@@ -5,7 +5,7 @@
 #include <seqan3/io/stream/debug_stream.hpp>
 
 #include "sum_offload.hpp"
-#include "sum_serial.hpp"
+#include "sum_simd.hpp"
 
 int main(int argc, char **argv)
 {
@@ -22,7 +22,10 @@ int main(int argc, char **argv)
 
 int sum_offload_node(std::vector<int> numbers)
 {
+    using int32x_t = seqan3::simd::simd_type_t<int>;
+    constexpr size_t simd_length = seqan3::simd::simd_traits<int32x_t>::length;
     seqan3::debug_stream << "called on node " << seqan3::offload::this_node() << '\n';
+    seqan3::debug_stream << "length of simd: " << simd_length << std::endl;
     seqan3::debug_stream << "vector: " << trim(numbers) << std::endl;
-    return sum_serial(numbers);
+    return sum_simd(numbers);
 }

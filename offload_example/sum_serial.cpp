@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <numeric>
 #include <thread>
@@ -10,10 +9,10 @@
 
 int main(int argc, char **argv)
 {
-    std::vector<int> numbers{std::ranges::view::iota(0, 100)};
+    std::vector<int> numbers{std::ranges::view::iota(0, 1000)};
     seqan3::debug_stream << "vector: " << numbers << std::endl;
 
-    int s = sum_serial(numbers);
-    std::cout << "result of sum[0,...," << numbers.size() << ") = " << s << '\n';
+    int sum = sum_serial(numbers);
+    std::cout << "result of sum[0,...," << numbers.size() << ") = " << sum << '\n';
     return 0;
 }

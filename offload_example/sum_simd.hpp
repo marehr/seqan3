@@ -1,6 +1,11 @@
 #pragma once
 
-int sum_simd(std::vector<int> numbers)
+#include <seqan3/core/simd/simd.hpp>
+#include <seqan3/core/simd/simd_algorithm.hpp>
+
+#include "sum_serial.hpp"
+
+int sum_simd(std::span<int const> numbers)
 {
     using int32x_t = seqan3::simd::simd_type_t<int>;
     constexpr size_t simd_length = seqan3::simd::simd_traits<int32x_t>::length;
@@ -17,8 +22,7 @@ int sum_simd(std::vector<int> numbers)
         partial_sums += seqan3::simd::load<int32x_t>(it);
 
     // add remainder loop
-    for (; it < it_end; ++it)
-        sum += *it;
+    sum += sum_serial(std::span{it, it_end});
 
     // construct complete sum
     for (size_t i = 0u; i < simd_length; ++i)

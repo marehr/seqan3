@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo -e \\033c >> log.$OMPI_COMM_WORLD_RANK
+$@ >> log.$OMPI_COMM_WORLD_RANK 2>&1

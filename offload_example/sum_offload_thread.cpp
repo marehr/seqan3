@@ -5,7 +5,7 @@
 #include <seqan3/io/stream/debug_stream.hpp>
 
 #include "sum_offload.hpp"
-#include "sum_serial.hpp"
+#include "sum_thread.hpp"
 
 int main(int argc, char **argv)
 {
@@ -22,7 +22,10 @@ int main(int argc, char **argv)
 
 int sum_offload_node(std::vector<int> numbers)
 {
+    size_t nodes = seqan3::offload::num_nodes();
+    size_t threads = std::thread::hardware_concurrency() / nodes;
+    seqan3::debug_stream << "number of threads: " << threads << std::endl;
     seqan3::debug_stream << "called on node " << seqan3::offload::this_node() << '\n';
     seqan3::debug_stream << "vector: " << trim(numbers) << std::endl;
-    return sum_serial(numbers);
+    return sum_thread<sum_serial>(numbers, threads);
 }
