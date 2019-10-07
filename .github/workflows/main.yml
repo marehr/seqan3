@@ -22,4 +22,4 @@ jobs:
         mkdir build
         cd build
         cmake ../test/unit
-        cmake --build -j 2  .
+        cmake --build . -j 2
