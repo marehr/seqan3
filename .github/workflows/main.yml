@@ -13,9 +13,11 @@ jobs:
       run: |
         g++ --version
         cmake --version
-        ls -al .
+        ccache --version
+        nproc
     - name: Run a multi-line script
       run: |
         mkdir build
         cd build
-        cmake ..
+        cmake ../test/unit
+        cmake --build -j 2  .
