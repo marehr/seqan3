@@ -94,7 +94,7 @@ else ()
     return ()
 endif ()
 
-# make output globally quit if required by find_package, this effects cmake functions like `check_*`
+# make output globally quiet if required by find_package, this effects cmake functions like `check_*`
 set(CMAKE_REQUIRED_QUIET_SAVE ${CMAKE_REQUIRED_QUIET})
 set(CMAKE_REQUIRED_QUIET ${${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY})
 
