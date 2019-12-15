@@ -149,27 +149,6 @@ TEST(structure_file_output_class, default_template_args_and_deduction_guides)
         EXPECT_TRUE((std::is_same_v<typename t::valid_formats,      type_list<format_vienna>>));
         EXPECT_TRUE((std::is_same_v<typename t::stream_char_type,   comp3>));
     }
-
-    /* guided stream constructor + custom fields + different stream_char_type */
-    {
-        std::wostringstream ext{};
-        structure_file_output fout{ext, format_vienna{}, fields<field::SEQ>{}};
-
-        using t = decltype(fout);
-        EXPECT_TRUE((std::is_same_v<typename t::selected_field_ids, fields<field::SEQ>>));
-        EXPECT_TRUE((std::is_same_v<typename t::valid_formats,      type_list<format_vienna>>));
-        EXPECT_TRUE((std::is_same_v<typename t::stream_char_type,   wchar_t>));
-    }
-
-    /* guided stream temporary constructor + custom fields + different stream_char_type */
-    {
-        structure_file_output fout{std::wostringstream{}, format_vienna{}, fields<field::SEQ>{}};
-
-        using t = decltype(fout);
-        EXPECT_TRUE((std::is_same_v<typename t::selected_field_ids, fields<field::SEQ>>));
-        EXPECT_TRUE((std::is_same_v<typename t::valid_formats,      type_list<format_vienna>>));
-        EXPECT_TRUE((std::is_same_v<typename t::stream_char_type,   wchar_t>));
-    }
 }
 
 struct structure_file_output_write : public ::testing::Test
@@ -396,22 +375,9 @@ TEST_F(structure_file_output_rows, assign_structure_file_pipes)
 
 struct structure_file_output_columns : public structure_file_output_rows{};
 
-TEST_F(structure_file_output_columns, assign_record_of_columns)
+TEST_F(structure_file_output_columns, assign_columns)
 {
-    record<type_list<std::vector<rna5_vector>, std::vector<std::string>, std::vector<std::vector<wuss51>>>,
-           fields<field::SEQ, field::ID, field::STRUCTURE>> columns
-    {
-        seqs,
-        ids,
-        structures
-    };
-
-    assign_impl(columns);
-}
-
-TEST_F(structure_file_output_columns, assign_tuple_of_columns)
-{
-    assign_impl(std::tie(seqs, ids, structures));
+    assign_impl(views::zip(seqs, ids, structures));
 }
 
 // ----------------------------------------------------------------------------

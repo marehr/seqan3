@@ -25,16 +25,34 @@
 #include <seqan3/core/type_list/type_list.hpp>
 #include <seqan3/io/alignment_file/header.hpp>
 #include <seqan3/io/alignment_file/input_options.hpp>
+#include <seqan3/io/alignment_file/misc.hpp>
 #include <seqan3/io/alignment_file/sam_tag_dictionary.hpp>
 
 namespace seqan3::detail
 {
 
+/*!\brief Internal class used to expose the actual format interface to read alignment records from the file.
+ * \ingroup alignment_file
+ *
+ * \tparam format_type The type of the format to be exposed.
+ *
+ * \details
+ *
+ * Exposes the protected member function `read_alignment_record` from the given `format_type`, such that the file can
+ * call the proper function for the selected format.
+ */
 template <typename format_type>
 struct alignment_file_input_format_exposer : public format_type
 {
 public:
-    using format_type::read_alignment_record;
+    // Can't use `using format_type::read_alignment_record` as it produces a hard failure in the format concept check
+    // for types that do not model the format concept, i.e. don't offer the proper read_alignment_record interface.
+    //!\brief Forwards to the seqan3::alignment_file_input_format::read_alignment_record interface.
+    template <typename ...ts>
+    void read_alignment_record(ts && ...args)
+    {
+        format_type::read_alignment_record(std::forward<ts>(args)...);
+    }
 };
 
 } // namespace seqan3::detail
@@ -69,7 +87,7 @@ SEQAN3_CONCEPT alignment_file_input_format =
               std::optional<int32_t>                                              & ref_offset,
               std::pair<std::vector<gapped<dna4>>, std::vector<gapped<dna4>>>     & align,
               std::vector<cigar>                                                  & cigar,
-              uint16_t                                                            & flag,
+              sam_flag                                                            & flag,
               uint8_t                                                             & mapq,
               std::tuple<std::optional<int32_t>, std::optional<int32_t>, int32_t> & mate,
               sam_tag_dictionary                                                  & tag_dict,

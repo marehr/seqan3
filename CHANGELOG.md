@@ -25,6 +25,10 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 
 * `find_package(sEqAn3)` is now case-insensitive and always populates `SEQAN3_*` variables in all upper-case.
 
+#### Alignment
+* The score type used in the alignment score matrix and the result type is now configurable through a template
+  argument of the seqan3::align_cfg::result configuration.
+
 #### Argument parser
 * Simplified reading file extensions from formatted files in the input/output file validators.
 * The seqan3::value_list_validator is now constructible from a range or a parameter pack.
@@ -33,7 +37,7 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 #### Core
 * Added traits for "metaprogramming" with `seqan3::type_list` and type packs.
 
-#### Input/Output
+#### I/O
 
 * Asynchronous input (background file reading) supported via seqan3::view::async_input_buffer.
 * Reading field::CIGAR into a vector over seqan3::cigar is supported via seqan3::alignment_file_input.
@@ -52,11 +56,26 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 * **Changed class signature of input/output file validators:**
   Most user code will be unaffected; to fix possible compiler errors you need to add an empty template parameter list to
   the respective instances (e.g. change `input_file_validator` to `input_file_validator<>`).
+* The member type that denotes which arguments a `validator` can validate has been renamed from `value_type` to
+  `option_value_type`.
 
 #### Core
 
 * **The `type_list` header has moved:**
   If you included `<seqan3/core/type_list.hpp>` you need to change the path to `<seqan3/core/type_list/type_list.hpp>`.
+
+#### I/O
+
+* **Removed the field-based in- and output interface for structure files through std::get and std::tie:**
+  Output can instead be achieved with seqan3::views:zip(), for input we will implement unzip() in the future.
+* The `field::FLAG` of SAM/BAM input and output is now an **enum** instead of a simple integer (see seqan3::sam_flag).
+
+* **Removed the char type from the input and output files:**
+  Most user code will be unaffected; however, if you have fully specified all templates of any of the input or output
+  files in your code, you need to remove the template parameter to select the char type of the stream
+  (e.g. change `seqan3::sequence_file_input<traits_t, fields_t, formats_t, char>` to
+  `seqan3::sequence_file_input<traits_t, fields_t, formats_t>`). Before this change, setting the char type gave the
+  impression that also streams over wide characters are supported which is not the case yet.
 
 #### Range
 
