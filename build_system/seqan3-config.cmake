@@ -43,8 +43,6 @@
 # Once the search has been performed, the following variables will be set.
 #
 #   SEQAN3_FOUND            -- Indicate whether SeqAn was found and requirements met.
-#   SeqAn3_FOUND            -- the same as SEQAN3_FOUND
-#   seqan3_FOUND            -- the same as SEQAN3_FOUND
 #
 #   SEQAN3_VERSION_STRING   -- The version as string, e.g. "3.0.0"
 #   SEQAN3_VERSION_MAJOR    -- e.g. 3
@@ -77,22 +75,11 @@ cmake_minimum_required (VERSION 3.4...3.12)
 # Set initial variables
 # ----------------------------------------------------------------------------
 
-set (SEQAN3_FOUND FALSE)
-set (seqan3_FOUND FALSE)
-set (SeqAn3_FOUND FALSE)
+set (${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
 
-# work around obscure case sensitivity problems in CMake (https://cmake.org/pipermail/cmake/2009-March/027414.html)
-if (DEFINED seqan3_DIR)
-    set (FIND_NAME "seqan3")
-elseif (DEFINED SeqAn3_DIR)
-    set (FIND_NAME "SeqAn3")
-elseif (DEFINED SEQAN3_DIR)
-    set (FIND_NAME "SEQAN3")
-else ()
-    message (FATAL_ERROR "You must give \"SEQAN3\", \"SeqAn3\" or \"seqan3\" as the package name to find_package ();\n \
-                         other case/combinations are not supported.")
-    return ()
-endif ()
+# make output globally quit if required by find_package, this effects cmake functions like `check_*`
+set(CMAKE_REQUIRED_QUIET_SAVE ${CMAKE_REQUIRED_QUIET})
+set(CMAKE_REQUIRED_QUIET ${${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY})
 
 # ----------------------------------------------------------------------------
 # Greeter
@@ -102,7 +89,7 @@ string (ASCII 27 Esc)
 set (ColourBold "${Esc}[1m")
 set (ColourReset "${Esc}[m")
 
-if (NOT ${FIND_NAME}_FIND_QUIETLY)
+if (NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY)
     message (STATUS "${ColourBold}Finding SeqAn3 and checking requirements:${ColourReset}")
 endif ()
 
@@ -110,25 +97,25 @@ endif ()
 # Includes
 # ----------------------------------------------------------------------------
 
-include (FindPackageMessage)
 include (CheckIncludeFileCXX)
 include (CheckCXXSourceCompiles)
+include (FindPackageHandleStandardArgs)
 
 # ----------------------------------------------------------------------------
 # Pretty printing and error handling
 # ----------------------------------------------------------------------------
 
 macro (seqan3_config_print text)
-    if (NOT ${FIND_NAME}_FIND_QUIETLY)
+    if (NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY)
         message (STATUS "  ${text}")
     endif ()
 endmacro ()
 
 macro (seqan3_config_error text)
-    if (${FIND_NAME}_FIND_REQUIRED)
+    if (${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
         message (FATAL_ERROR ${text})
     else ()
-        if (NOT ${FIND_NAME}_FIND_QUIETLY)
+        if (NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY)
             message (WARNING ${text})
         endif ()
         return ()
@@ -136,45 +123,36 @@ macro (seqan3_config_error text)
 endmacro ()
 
 # ----------------------------------------------------------------------------
-# Detect if we are a clone of repository and if yes auto-add submodules
-# ----------------------------------------------------------------------------
-# Note that seqan3-config.cmake can be standalone and thus SEQAN3_CLONE_DIR might be empty.
-find_path (SEQAN3_CLONE_DIR NAMES build_system/seqan3-config.cmake HINTS "${CMAKE_CURRENT_LIST_DIR}/..")
-
-if (SEQAN3_CLONE_DIR)
-    seqan3_config_print ("  Detected as running from a repository checkout…")
-
-    if (NOT SEQAN3_INCLUDE_DIR AND IS_DIRECTORY "${SEQAN3_CLONE_DIR}/include")
-        seqan3_config_print ("  …adding SeqAn3 include:     ${SEQAN3_CLONE_DIR}/include")
-        set (SEQAN3_INCLUDE_DIR "${SEQAN3_CLONE_DIR}/include")
-    endif ()
-
-    if (EXISTS "${SEQAN3_CLONE_DIR}/submodules")
-        file (GLOB submodules ${SEQAN3_CLONE_DIR}/submodules/*/include)
-        foreach (submodule ${submodules})
-            if (IS_DIRECTORY ${submodule})
-                seqan3_config_print ("  …adding submodule include:  ${submodule}")
-                set (SEQAN3_DEPENDENCY_INCLUDE_DIRS ${submodule} ${SEQAN3_DEPENDENCY_INCLUDE_DIRS})
-            endif ()
-        endforeach ()
-    endif ()
-endif ()
-
-# ----------------------------------------------------------------------------
 # Find SeqAn3 include path
 # ----------------------------------------------------------------------------
 
-if (NOT SEQAN3_INCLUDE_DIR)
-    find_path (SEQAN3_INCLUDE_DIR "seqan3/version.hpp" HINTS ${SEQAN3_DEPENDENCY_INCLUDE_DIRS})
-endif ()
+# Note that seqan3-config.cmake can be standalone and thus SEQAN3_CLONE_DIR might be empty.
+find_path (SEQAN3_CLONE_DIR NAMES build_system/seqan3-config.cmake HINTS "${CMAKE_CURRENT_LIST_DIR}/..")
+find_path (SEQAN3_INCLUDE_DIR NAMES "seqan3/version.hpp" HINTS "${SEQAN3_CLONE_DIR}/include")
+find_path (SEQAN3_SUBMODULES_DIR NAMES submodules/range-v3 HINTS "${SEQAN3_CLONE_DIR}" "${SEQAN3_INCLUDE_DIR}/seqan3")
 
-mark_as_advanced (SEQAN3_INCLUDE_DIR)
-
-# find include directory
 if (SEQAN3_INCLUDE_DIR)
     seqan3_config_print ("SeqAn3 include dir found:   ${SEQAN3_INCLUDE_DIR}")
 else ()
-    seqan3_config_error ("SeqAn3 include directory could not be found.")
+    seqan3_config_error ("SeqAn3 include directory could not be found (SEQAN3_INCLUDE_DIR: '${SEQAN3_INCLUDE_DIR}')")
+endif ()
+
+# ----------------------------------------------------------------------------
+# Detect if we are a clone of repository and if yes auto-add submodules
+# ----------------------------------------------------------------------------
+
+if (SEQAN3_CLONE_DIR)
+    seqan3_config_print ("Detected as running from a repository checkout…")
+endif ()
+
+if (SEQAN3_SUBMODULES_DIR)
+    file (GLOB submodules ${SEQAN3_SUBMODULES_DIR}/submodules/*/include)
+    foreach (submodule ${submodules})
+        if (IS_DIRECTORY ${submodule})
+            seqan3_config_print ("  …adding submodule include:  ${submodule}")
+            set (SEQAN3_DEPENDENCY_INCLUDE_DIRS ${submodule} ${SEQAN3_DEPENDENCY_INCLUDE_DIRS})
+        endif ()
+    endforeach ()
 endif ()
 
 # ----------------------------------------------------------------------------
@@ -238,7 +216,7 @@ option (SEQAN3_NO_BZIP2 "Don't use BZip2, even if present." OFF)
 # Require C++17
 # ----------------------------------------------------------------------------
 
-set (CMAKE_REQUIRED_FLAGS_ORIGINAL ${CMAKE_REQUIRED_FLAGS})
+set (CMAKE_REQUIRED_FLAGS_SAVE ${CMAKE_REQUIRED_FLAGS})
 
 set (CXXSTD_TEST_SOURCE
     "#if !defined (__cplusplus) || (__cplusplus < 201703L)
@@ -251,7 +229,7 @@ check_cxx_source_compiles ("${CXXSTD_TEST_SOURCE}" CXX17_BUILTIN)
 if (CXX17_BUILTIN)
     seqan3_config_print ("C++ Standard-17 support:    builtin")
 else ()
-    set (CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_ORIGINAL} -std=c++17")
+    set (CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_SAVE} -std=c++17")
 
     check_cxx_source_compiles ("${CXXSTD_TEST_SOURCE}" CXX17_FLAG)
 
@@ -268,7 +246,7 @@ endif ()
 # Require C++ Concepts
 # ----------------------------------------------------------------------------
 
-set (CMAKE_REQUIRED_FLAGS_ORIGINAL ${CMAKE_REQUIRED_FLAGS})
+set (CMAKE_REQUIRED_FLAGS_SAVE ${CMAKE_REQUIRED_FLAGS})
 
 set (CXXSTD_TEST_SOURCE
     "static_assert (__cpp_concepts >= 201507);
@@ -282,7 +260,7 @@ else ()
     set (CONCEPTS_FLAG "")
 
     foreach (_FLAG -std=c++20 -std=c++2a -fconcepts)
-        set (CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_ORIGINAL} ${_FLAG}")
+        set (CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_SAVE} ${_FLAG}")
 
         check_cxx_source_compiles ("${CXXSTD_TEST_SOURCE}" CONCEPTS_FLAG${_FLAG})
 
@@ -333,7 +311,7 @@ else ()
 endif ()
 
 # check if library is required
-set (CMAKE_REQUIRED_LIBRARIES_ORIGINAL ${CMAKE_REQUIRED_LIBRARIES})
+set (CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
 
 check_cxx_source_compiles ("${CXXSTD_TEST_SOURCE}" C++17FS_BUILTIN)
 
@@ -343,7 +321,7 @@ else ()
     set (C++17FS_LIB "")
 
     foreach (_LIB stdc++fs)
-        set (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_ORIGINAL} ${_LIB})
+        set (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE} ${_LIB})
 
         check_cxx_source_compiles ("${CXXSTD_TEST_SOURCE}" C++17FS_LIB-l${_LIB})
 
@@ -352,7 +330,7 @@ else ()
             set (C++17FS_LIB ${_LIB})
             break ()
         endif ()
-        set (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_ORIGINAL})
+        set (CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
     endforeach ()
 
     if (C++17FS_LIB)
@@ -577,20 +555,8 @@ else ()
 endif ()
 
 # ----------------------------------------------------------------------------
-# We made it!
+# Export targets
 # ----------------------------------------------------------------------------
-
-set (SEQAN3_FOUND TRUE)
-set (seqan3_FOUND TRUE)
-set (SeqAn3_FOUND TRUE)
-
-# ----------------------------------------------------------------------------
-# Print Variables
-# ----------------------------------------------------------------------------
-
-if (NOT ${FIND_NAME}_FIND_QUIETLY)
-    message (STATUS "${ColourBold}Found SeqAn3:${ColourReset} ${SEQAN3_INCLUDE_DIR}/seqan3 (found version \"${SEQAN3_VERSION_STRING}\")")
-endif ()
 
 separate_arguments (SEQAN3_CXX_FLAGS_LIST UNIX_COMMAND "${SEQAN3_CXX_FLAGS}")
 
@@ -608,6 +574,21 @@ add_library (seqan3::seqan3 ALIAS seqan3_seqan3)
 # propagate SEQAN3_INCLUDE_DIR into SEQAN3_INCLUDE_DIRS
 set (SEQAN3_INCLUDE_DIRS ${SEQAN3_INCLUDE_DIR} ${SEQAN3_DEPENDENCY_INCLUDE_DIRS})
 
+# ----------------------------------------------------------------------------
+# Finish find_package call
+# ----------------------------------------------------------------------------
+
+find_package_handle_standard_args (${CMAKE_FIND_PACKAGE_NAME} REQUIRED_VARS SEQAN3_INCLUDE_DIR)
+
+# Set SEQAN3_* variables with the content of ${CMAKE_FIND_PACKAGE_NAME}_(FOUND|...|VERSION)
+# This needs to be done, because `find_package(sEqAn3)` might be called in any case-sensitive way and we want to
+# guarantee that SEQAN3_* are always set.
+foreach (package_var FOUND DIR ROOT CONFIG VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH VERSION_TWEAK VERSION_COUNT)
+    set (SEQAN3_${package_var} "${${CMAKE_FIND_PACKAGE_NAME}_${package_var}}")
+endforeach ()
+
+set (CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_SAVE})
+
 if (SEQAN3_FIND_DEBUG)
   message ("Result for ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt")
   message ("")
@@ -616,7 +597,7 @@ if (SEQAN3_FIND_DEBUG)
   message ("  CMAKE_INCLUDE_PATH          ${CMAKE_INCLUDE_PATH}")
   message ("  SEQAN3_INCLUDE_DIR          ${SEQAN3_INCLUDE_DIR}")
   message ("")
-  message ("  ${FIND_NAME}_FOUND                ${${FIND_NAME}_FOUND}")
+  message ("  ${CMAKE_FIND_PACKAGE_NAME}_FOUND                ${${CMAKE_FIND_PACKAGE_NAME}_FOUND}")
   message ("  SEQAN3_HAS_ZLIB             ${ZLIB_FOUND}")
   message ("  SEQAN3_HAS_BZIP2            ${BZIP2_FOUND}")
   message ("")

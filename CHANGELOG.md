@@ -21,6 +21,10 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 
 ## New features
 
+### CMake
+
+* `find_package(sEqAn3)` is now case-insensitive and always populates `SEQAN3_*` variables in all upper-case.
+
 #### Argument parser
 * Simplified reading file extensions from formatted files in the input/output file validators.
 * The seqan3::value_list_validator is now constructible from a range or a parameter pack.
