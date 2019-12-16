@@ -164,9 +164,7 @@ macro (seqan3_require_ccache)
     unset (CCACHE_PROGRAM)
 endmacro ()
 
-macro (seqan3_require_benchmark)
-    enable_testing ()
-
+macro (seqan3_require_benchmark_old gbenchmark_git_tag)
     set (gbenchmark_project_args ${SEQAN3_EXTERNAL_PROJECT_CMAKE_ARGS})
     list (APPEND gbenchmark_project_args "-DBENCHMARK_ENABLE_TESTING=false")
     # list (APPEND gbenchmark_project_args "-DBENCHMARK_ENABLE_LTO=true")
@@ -181,7 +179,7 @@ macro (seqan3_require_benchmark)
         gbenchmark_project
         PREFIX gbenchmark_project
         GIT_REPOSITORY "https://github.com/google/benchmark.git"
-        GIT_TAG "v1.5.0"
+        GIT_TAG "${gbenchmark_git_tag}"
         SOURCE_DIR "${SEQAN3_BENCHMARK_CLONE_DIR}"
         CMAKE_ARGS "${gbenchmark_project_args}"
         BUILD_BYPRODUCTS "${gbenchmark_path}"
@@ -195,6 +193,28 @@ macro (seqan3_require_benchmark)
     set_property (TARGET gbenchmark APPEND PROPERTY INTERFACE_LINK_LIBRARIES "pthread")
 
     unset (gbenchmark_path)
+endmacro ()
+
+macro (seqan3_require_benchmark)
+    enable_testing ()
+
+    set (gbenchmark_git_tag "v1.5.0")
+
+    if (NOT ${CMAKE_VERSION} VERSION_LESS 3.14)
+        message (STATUS "Add Benchmark Library:")
+        include (FetchContent)
+        FetchContent_Declare (
+            gbenchmark_fetch_content
+            GIT_REPOSITORY "https://github.com/google/benchmark.git"
+            GIT_TAG "${gbenchmark_git_tag}"
+        )
+        option (BENCHMARK_ENABLE_TESTING "" OFF)
+        FetchContent_MakeAvailable(gbenchmark_fetch_content)
+
+        add_library (gbenchmark ALIAS benchmark_main)
+    else ()
+        seqan3_require_benchmark_old ("${gtest_git_tag}")
+    endif ()
 endmacro ()
 
 macro (seqan3_require_test_old gtest_git_tag)
