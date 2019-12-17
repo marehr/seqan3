@@ -141,7 +141,7 @@ endmacro ()
 # Note that seqan3-config.cmake can be standalone and thus SEQAN3_CLONE_DIR might be empty.
 # * `SEQAN3_CLONE_DIR` was already found in seqan3-config-version.cmake
 # * `SEQAN3_INCLUDE_DIR` was already found in seqan3-config-version.cmake
-find_path (SEQAN3_SUBMODULES_DIR NAMES submodules/range-v3 HINTS "${SEQAN3_CLONE_DIR}" "${SEQAN3_INCLUDE_DIR}/seqan3")
+find_path (SEQAN3_SUBMODULES_DIR NAMES submodules/sdsl-lite HINTS "${SEQAN3_CLONE_DIR}" "${SEQAN3_INCLUDE_DIR}/seqan3")
 
 if (SEQAN3_CLONE_DIR)
     seqan3_config_print ("  Detected as running from a repository checkout…")
