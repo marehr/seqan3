@@ -211,6 +211,7 @@ macro (seqan3_require_benchmark)
         target_link_libraries (gbenchmark INTERFACE "benchmark::benchmark_main")
     elseif (NOT ${CMAKE_VERSION} VERSION_LESS 3.14)
         message (STATUS "Fetch google benchmark:")
+
         include (FetchContent)
         FetchContent_Declare (
             gbenchmark_fetch_content
@@ -223,6 +224,7 @@ macro (seqan3_require_benchmark)
         add_library (gbenchmark ALIAS benchmark_main)
     else ()
         message (STATUS "Use google benchmark as external project:")
+
         seqan3_require_benchmark_old ("${gtest_git_tag}")
     endif ()
 endmacro ()
