@@ -23,7 +23,7 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 
 ### CMake
 
-* `find_package(sEqAn3)` is now case-insensitive and always populates `SEQAN3_*` variables in all upper-case.
+* `find_package(SeqAn3)` is now case-insensitive and always populates `SEQAN3_*` variables in all upper-case.
 
 #### Alignment
 * The score type used in the alignment score matrix and the result type is now configurable through a template
