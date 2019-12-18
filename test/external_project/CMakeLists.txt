@@ -5,38 +5,14 @@
 # shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 # -----------------------------------------------------------------------------------------------------
 
-cmake_minimum_required (VERSION 3.3)
+cmake_minimum_required (VERSION 3.4)
 project (seqan3_test_external_project CXX)
 
 include (../seqan3-test.cmake) # for SEQAN3_EXTERNAL_PROJECT_CMAKE_ARGS, SEQAN3_VERSION
 include (ExternalProject)
 
 set (SEQAN3_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../")
-
-# install and package seqan3 library
-ExternalProject_Add (
-    seqan3_test_prerequisite
-    PREFIX seqan3_test_prerequisite
-    SOURCE_DIR "${SEQAN3_ROOT}"
-    CMAKE_ARGS
-        ${SEQAN3_EXTERNAL_PROJECT_CMAKE_ARGS}
-        "-DCMAKE_INSTALL_PREFIX=<BINARY_DIR>/usr"
-    STEP_TARGETS configure install
-    BUILD_BYPRODUCTS "<BINARY_DIR>/include"
-)
-set (SEQAN3_PACKAGE_ZIP_URL "${PROJECT_BINARY_DIR}/seqan3-${SEQAN3_VERSION}-${CMAKE_SYSTEM_NAME}.zip")
-ExternalProject_Add_Step (
-    seqan3_test_prerequisite
-    package
-    COMMAND ${CMAKE_CPACK_COMMAND} -G ZIP -B "${PROJECT_BINARY_DIR}"
-    DEPENDEES configure install
-    WORKING_DIRECTORY "<BINARY_DIR>"
-    BYPRODUCTS
-        ${SEQAN3_PACKAGE_ZIP_URL}
-        "${SEQAN3_PACKAGE_ZIP_URL}.sha256"
-)
-ExternalProject_Get_property(seqan3_test_prerequisite BINARY_DIR)
-set (SEQAN3_SYSTEM_PREFIX "${BINARY_DIR}/usr")
+include (install-seqan3.cmake)
 
 # 1) find_package: seqan3 is a submodule and we add it with add_subdirectory
 # (ExternalProject_Add simulates a fresh and separate invocation of cmake ../)
