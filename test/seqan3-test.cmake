@@ -201,7 +201,7 @@ macro (seqan3_require_benchmark)
     set (gbenchmark_version "1.5.0")
     set (gbenchmark_git_tag "v${gbenchmark_version}")
 
-    # try to find system-wide install of google benchmark
+    # try to find system-wide installation of google benchmark
     find_package (benchmark ${gbenchmark_version})
 
     if (benchmark_FOUND)
