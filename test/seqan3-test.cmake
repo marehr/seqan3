@@ -198,9 +198,18 @@ endmacro ()
 macro (seqan3_require_benchmark)
     enable_testing ()
 
-    set (gbenchmark_git_tag "v1.5.0")
+    set (gbenchmark_version "1.5.0")
+    set (gbenchmark_git_tag "v${gbenchmark_version}")
 
-    if (NOT ${CMAKE_VERSION} VERSION_LESS 3.14)
+    # try to find system-wide install of google benchmark
+    find_package (benchmark ${gbenchmark_version})
+
+    if (benchmark_FOUND)
+        message (STATUS "Found system-wide install of google benchmark!")
+
+        add_library (gbenchmark INTERFACE)
+        target_link_libraries (gbenchmark INTERFACE "benchmark::benchmark_main")
+    elseif (NOT ${CMAKE_VERSION} VERSION_LESS 3.14)
         message (STATUS "Fetch google benchmark:")
         include (FetchContent)
         FetchContent_Declare (
