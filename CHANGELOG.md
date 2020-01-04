@@ -49,12 +49,6 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
   You are only affected if you added types to `seqan3::custom::`.
   Please see [About Customisation](http://docs.seqan.de/seqan/3-master-user/about_customisation.html).
 
-### CMake
-
-* [find_package](https://cmake.org/cmake/help/latest/command/find_package.html#version-selection) now accepts minimum
-  versions (e.g. `find_package(SEQAN3 3.1.0)` requires at least seqan3 with a version of `>= 3.1.0` and `< 4.0.0`).
-* `SEQAN3_VERSION_STRING` was renamed to `SEQAN3_VERSION` (`find_package(SEQAN3)`).
-
 #### Argument parser
 
 * The seqan3::value_list_validator is not constructible from a std::initialiser_list any more
@@ -64,6 +58,12 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
   the respective instances (e.g. change `input_file_validator` to `input_file_validator<>`).
 * The member type that denotes which arguments a `validator` can validate has been renamed from `value_type` to
   `option_value_type`.
+
+#### CMake
+
+* [find_package](https://cmake.org/cmake/help/latest/command/find_package.html#version-selection) now accepts minimum
+versions (e.g. `find_package(SEQAN3 3.1.0)` requires at least seqan3 with a version of `>= 3.1.0` and `< 4.0.0`).
+* The variable `SEQAN3_VERSION_STRING` defined by `find_package(SEQAN3)` was renamed to `SEQAN3_VERSION`.
 
 #### Core
 
