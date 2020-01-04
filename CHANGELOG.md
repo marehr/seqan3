@@ -53,7 +53,7 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 
 * [find_package](https://cmake.org/cmake/help/latest/command/find_package.html#version-selection) now accepts minimum
 versions (e.g. `find_package(SEQAN3 3.1.0)` requires at least seqan3 with a version of `>= 3.1.0` and `< 4.0.0`).
-* `SEQAN3_VERSION_STRING` was renamed to `SEQAN3_VERSION` (`find_package(SEQAN3)`).
+* The variable `SEQAN3_VERSION_STRING` defined by `find_package(SEQAN3)` was renamed to `SEQAN3_VERSION`.
 
 #### Core
 
