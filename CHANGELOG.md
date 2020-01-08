@@ -30,6 +30,10 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 * The seqan3::value_list_validator is now constructible from a range or a parameter pack.
 * Enable subcommand argument parsing ([How-to](https://docs.seqan.de/seqan/3-master-user/subcommand_arg_parse.html)).
 
+#### Build system
+
+* Add top-level `CMakeLists.txt` for easier integration when SeqAn3 is used as a `git submodule`.
+
 #### Core
 * Added traits for "metaprogramming" with `seqan3::type_list` and type packs.
 
