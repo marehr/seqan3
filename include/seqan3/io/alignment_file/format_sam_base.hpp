@@ -136,7 +136,7 @@ protected:
 };
 
 /*!\brief Checks for known reference ids or adds a new reference is and assigns a reference id to `ref_id`.
- * \tparam ref_id_type         The type of the reference id (usually a views::all over ref_id_tmp_type).
+ * \tparam ref_id_type         The type of the reference id (usually a views::type_reduce over ref_id_tmp_type).
  * \tparam ref_id_tmp_type     The type of the temporary parsed id (same_as type as reference ids in header).
  * \tparam header_type         The type of the alignment header.
  * \tparam ref_seqs_type       A tag whether the reference information were given or not (std::ignore or not).
@@ -286,7 +286,7 @@ inline std::tuple<std::vector<cigar>, int32_t, int32_t> format_sam_base::parse_c
     return {operations, ref_length, seq_length};
 }
 
-/*!\brief Construct the field::ALIGNMENT depending on the given information.
+/*!\brief Construct the field::alignment depending on the given information.
  * \tparam align_type      The alignment type.
  * \tparam ref_seqs_type   The type of reference sequences (might decay to ignore).
  * \param[in,out] align    The alignment (pair of aligned sequences) to fill.

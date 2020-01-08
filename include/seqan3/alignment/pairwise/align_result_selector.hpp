@@ -30,7 +30,7 @@
 #include <seqan3/core/type_list/traits.hpp>
 #include <seqan3/core/type_list/type_list.hpp>
 #include <seqan3/range/decorator/gap_decorator.hpp>
-#include <seqan3/range/views/view_all.hpp>
+#include <seqan3/range/views/type_reduce.hpp>
 #include <seqan3/std/ranges>
 
 namespace seqan3::detail
@@ -54,7 +54,7 @@ template <typename first_t, typename second_t>
 struct alignment_type<first_t, second_t>
 {
     //!\brief The alignment type with gap decorator.
-    using type = std::tuple<gap_decorator<all_view<first_t &>>, gap_decorator<all_view<second_t &>>>;
+    using type = std::tuple<gap_decorator<type_reduce_view<first_t &>>, gap_decorator<type_reduce_view<second_t &>>>;
 };
 
 /*!\brief Helper metafunction to select the alignment result type based on the configuration.
@@ -121,7 +121,7 @@ private:
     template <typename alignment_result_value_t>
     static constexpr auto augment_if_debug(alignment_result_value_t)
     {
-        if constexpr (configuration_t::template exists<detail::algorithm_debugging>())
+        if constexpr (configuration_t::template exists<detail::debug_mode>())
         {
             using as_type_list = transfer_template_args_onto_t<alignment_result_value_t, type_list>;
             using score_matrix_t = two_dimensional_matrix<std::optional<score_type>,

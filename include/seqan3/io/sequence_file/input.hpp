@@ -61,17 +61,17 @@ namespace seqan3
  *
  * \details
  *
- * Note that the alphabet type of the seqan3::field::SEQ_QUAL cannot be specified directly, it is always
+ * Note that the alphabet type of the seqan3::field::seq_qual cannot be specified directly, it is always
  * seqan3::qualified<sequence_alphabet, quality_alphabet> and the container type templates for
- * the field are those of seqan3::field::SEQ.
+ * the field are those of seqan3::field::seq.
  *
  * \{
  */
 /*!\typedef using sequence_alphabet
- * \brief Alphabet of the characters for the seqan3::field::SEQ; must satisfy seqan3::alphabet.
+ * \brief Alphabet of the characters for the seqan3::field::seq; must satisfy seqan3::alphabet.
  */
 /*!\typedef using sequence_legal_alphabet
- * \brief Intermediate alphabet for seqan3::field::SEQ; must satisfy seqan3::alphabet and be convertible to
+ * \brief Intermediate alphabet for seqan3::field::seq; must satisfy seqan3::alphabet and be convertible to
  * `sequence_alphabet`.
  *
  * \details
@@ -82,34 +82,22 @@ namespace seqan3
  * character and produce an error.
  */
 /*!\typedef using sequence_container
- * \brief Type template of the seqan3::field::SEQ, a container template over `sequence_alphabet`;
+ * \brief Type template of the seqan3::field::seq, a container template over `sequence_alphabet`;
  * must satisfy seqan3::sequence_container.
- */
-/*!\typedef using sequence_container_container
- * \brief Type template of a column of seqan3::field::SEQ, a container template that can hold multiple
- * `sequence_container`; must satisfy seqan3::sequence_container.
  */
 /*!\typedef using id_alphabet
- * \brief Alphabet of the characters for the seqan3::field::ID; must satisfy seqan3::alphabet.
+ * \brief Alphabet of the characters for the seqan3::field::id; must satisfy seqan3::alphabet.
  */
 /*!\typedef using id_container
- * \brief Type template of the seqan3::field::ID, a container template over `id_alphabet`;
+ * \brief Type template of the seqan3::field::id, a container template over `id_alphabet`;
  * must satisfy seqan3::sequence_container.
- */
-/*!\typedef using id_container_container
- * \brief Type template of a column of seqan3::field::ID, a container template that can hold multiple
- * `id_container`; must satisfy seqan3::sequence_container.
  */
 /*!\typedef using quality_alphabet
- * \brief Alphabet of the characters for the seqan3::field::QUAL; must satisfy seqan3::writable_quality_alphabet.
+ * \brief Alphabet of the characters for the seqan3::field::qual; must satisfy seqan3::writable_quality_alphabet.
  */
 /*!\typedef using quality_container
- * \brief Type template of the seqan3::field::QUAL, a container template over `quality_alphabet`;
+ * \brief Type template of the seqan3::field::qual, a container template over `quality_alphabet`;
  * must satisfy seqan3::sequence_container.
- */
-/*!\typedef using quality_container_container
- * \brief Type template of a column of seqan3::field::QUAL, a container template that can hold multiple
- * `quality_container`; must satisfy seqan3::sequence_container.
  */
 //!\}
 //!\cond
@@ -120,18 +108,12 @@ SEQAN3_CONCEPT sequence_file_input_traits = requires (t v)
     requires writable_alphabet<typename t::sequence_legal_alphabet>;
     requires explicitly_convertible_to<typename t::sequence_legal_alphabet, typename t::sequence_alphabet>;
     requires sequence_container<typename t::template sequence_container<typename t::sequence_alphabet>>;
-    requires sequence_container<typename t::template sequence_container_container<
-        typename t::template sequence_container<typename t::sequence_alphabet>>>;
 
     requires writable_alphabet<typename t::id_alphabet>;
     requires sequence_container<typename t::template id_container<typename t::id_alphabet>>;
-    requires sequence_container<typename t::template id_container_container<typename t::template id_container<
-        typename t::id_alphabet>>>;
 
     requires writable_quality_alphabet<typename t::quality_alphabet>;
     requires sequence_container<typename t::template quality_container<typename t::quality_alphabet>>;
-    requires sequence_container<typename t::template quality_container_container<
-        typename t::template quality_container<typename t::quality_alphabet>>>;
 };
 //!\endcond
 
@@ -169,20 +151,12 @@ struct sequence_file_input_default_traits_dna
     template <typename _sequence_alphabet>
     using sequence_container                = std::vector<_sequence_alphabet>;
 
-    //!\brief The container for sequences is seqan3::concatenated_sequences.
-    template <typename _sequence_container>
-    using sequence_container_container      = concatenated_sequences<_sequence_container>;
-
     //!\brief The alphabet for an identifier string is char.
     using id_alphabet                       = char;
 
     //!\brief The string type for an identifier is std::basic_string.
     template <typename _id_alphabet>
     using id_container                      = std::basic_string<_id_alphabet>;
-
-    //!\brief The container for identifier strings is seqan3::concatenated_sequences.
-    template <typename _id_container>
-    using id_container_container            = concatenated_sequences<_id_container>;
 
     //!\brief The alphabet for a quality annotation is seqan3::phred42.
     using quality_alphabet                  = phred42;
@@ -191,9 +165,6 @@ struct sequence_file_input_default_traits_dna
     template <typename _quality_alphabet>
     using quality_container                 = std::vector<_quality_alphabet>;
 
-    //!\brief The container for quality annotation strings is seqan3::concatenated_sequences.
-    template <typename _quality_container>
-    using quality_container_container       = concatenated_sequences<_quality_container>;
     //!\}
 };
 
@@ -237,14 +208,14 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
  *
  * The Sequence file abstraction supports reading four different fields:
  *
- *   1. seqan3::field::SEQ
- *   2. seqan3::field::ID
- *   3. seqan3::field::QUAL
- *   4. seqan3::field::SEQ_QUAL (sequence and qualities in one range)
+ *   1. seqan3::field::seq
+ *   2. seqan3::field::id
+ *   3. seqan3::field::qual
+ *   4. seqan3::field::seq_qual (sequence and qualities in one range)
  *
  * The first three fields are retrieved by default (and in that order). The last field may be selected to have
  * sequence and qualities directly stored in a more memory-efficient combined container. If you select the last
- * field you may not select seqan3::field::SEQ or seqan3::field::QUAL.
+ * field you may not select seqan3::field::seq or seqan3::field::qual.
  *
  * ### Construction and specialisation
  *
@@ -328,20 +299,6 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
  *
  * You can check whether a file is at end by comparing begin() and end() (if they are the same, the file is at end).
  *
- * ### Column-based reading
- *
- * The record-based interface treats the file as a range of tuples (the records), but in certain situations it
- * is desirable to read the file by field, i.e. column wise (tuple-of-ranges, instead of range-of-tuples).
- *
- * This interface is less flexible, but can save you copy operations in certain scenarios, given that
- * you have sufficient memory to load the entire file at once:
- *
- * \include test/snippet/io/sequence_file/sequence_file_input_col_read.cpp
- *
- * Note that for this to make sense, your storage data types need to be identical to the corresponding column types
- * of the file. If you require different column types you can specify you own traits, see
- * seqan3::sequence_file_input_traits.
- *
  * ### Formats
  *
  * We currently support reading the following formats:
@@ -353,15 +310,13 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
  */
 
 template <
-    sequence_file_input_traits                    traits_type_        = sequence_file_input_default_traits_dna,
-    detail::fields_specialisation                             selected_field_ids_ = fields<field::SEQ,
-                                                                            field::ID,
-                                                                            field::QUAL>,
-    detail::type_list_of_sequence_file_input_formats valid_formats_      = type_list<format_embl,
-                                                                               format_fasta,
-                                                                               format_fastq,
-                                                                               format_genbank,
-                                                                               format_sam>>
+    sequence_file_input_traits traits_type_ = sequence_file_input_default_traits_dna,
+    detail::fields_specialisation selected_field_ids_ = fields<field::seq, field::id, field::qual>,
+    detail::type_list_of_sequence_file_input_formats valid_formats_ = type_list<format_embl,
+                                                                                format_fasta,
+                                                                                format_fastq,
+                                                                                format_genbank,
+                                                                                format_sam>>
 class sequence_file_input
 {
 public:
@@ -382,7 +337,7 @@ public:
     /*!\brief The subset of seqan3::field IDs that are valid for this file; order corresponds to the types in
      * \ref field_types.
      */
-    using field_ids            = fields<field::SEQ, field::ID, field::QUAL, field::SEQ_QUAL>;
+    using field_ids            = fields<field::seq, field::id, field::qual, field::seq_qual>;
 
     static_assert([] () constexpr
                   {
@@ -396,27 +351,27 @@ public:
 
     static_assert([] () constexpr
                   {
-                      return !(selected_field_ids::contains(field::SEQ_QUAL) &&
-                               (selected_field_ids::contains(field::SEQ) ||
-                               (selected_field_ids::contains(field::QUAL))));
+                      return !(selected_field_ids::contains(field::seq_qual) &&
+                               (selected_field_ids::contains(field::seq) ||
+                               (selected_field_ids::contains(field::qual))));
                   }(),
-                  "You may not select field::SEQ_QUAL and either of field::SEQ and field::QUAL at the same time.");
+                  "You may not select field::seq_qual and either of field::seq and field::qual at the same time.");
 
     /*!\name Field types and record type
      * \brief These types are relevant for record/row-based reading; they may be manipulated via the \ref traits_type
      * to achieve different storage behaviour.
      * \{
      */
-    //!\brief The type of field::SEQ (std::vector <seqan3::dna5> by default).
+    //!\brief The type of field::seq (std::vector <seqan3::dna5> by default).
     using sequence_type         = typename traits_type::template sequence_container<
                                     typename traits_type::sequence_alphabet>;
-    //!\brief The type of field::ID (std::string by defaul).
+    //!\brief The type of field::id (std::string by defaul).
     using id_type               = typename traits_type::template id_container<
                                     typename traits_type::id_alphabet>;
-    //!\brief The type of field::QUAL (std::vector <seqan3::phred42> by default).
+    //!\brief The type of field::qual (std::vector <seqan3::phred42> by default).
     using quality_type          = typename traits_type::template quality_container<
                                     typename traits_type::quality_alphabet>;
-    //!\brief The type of field::SEQ_QUAL (std::vector <seqan3::dna5q> by default).
+    //!\brief The type of field::seq_qual (std::vector <seqan3::dna5q> by default).
     using sequence_quality_type = typename traits_type::
                                     template sequence_container<qualified<typename traits_type::sequence_alphabet,
                                                                           typename traits_type::quality_alphabet>>;
@@ -427,31 +382,6 @@ public:
     //!\brief The type of the record, a specialisation of seqan3::record; acts as a tuple of the selected field types.
     using record_type           = record<detail::select_types_with_ids_t<field_types, field_ids, selected_field_ids>,
                                          selected_field_ids>;
-    //!\}
-
-    /*!\name Field column types and tuple type
-     * \brief These types are relevant for field/column-wise reading; they may be manipulated via the \ref traits_type
-     * to achieve different storage behaviour.
-     * \{
-     */
-    //!\brief Column type of field::SEQ (seqan3::concatenated_sequences<sequence_type> by default).
-    using sequence_column_type          = typename traits_type::template sequence_container_container<sequence_type>;
-    //!\brief Column type of field::ID (seqan3::concatenated_sequences<id_type> by default).
-    using id_column_type                = typename traits_type::template id_container_container<id_type>;
-    //!\brief Column type of field::QUAL (seqan3::concatenated_sequences<quality_type> by default).
-    using quality_column_type           = typename traits_type::template quality_container_container<quality_type>;
-    //!\brief Column type of field::SEQ_QUAL (seqan3::concatenated_sequences<sequence_quality_type> by default).
-    using sequence_quality_column_type  = typename traits_type::template sequence_container_container<sequence_quality_type>;
-    //!\brief The previously defined types aggregated in a seqan3::type_list.
-    using field_column_types            = type_list<sequence_column_type,
-                                                    id_column_type,
-                                                    quality_column_type,
-                                                    sequence_quality_column_type>;
-    //!\brief The type emulated by the file when read column-wise.
-    using file_as_tuple_type            = record<detail::select_types_with_ids_t<field_column_types,
-                                                                                 field_ids,
-                                                                                 selected_field_ids>,
-                                                 selected_field_ids>;
     //!\}
 
     /*!\name Range associated types
@@ -657,67 +587,9 @@ public:
     }
     //!\}
 
-    /*!\name Tuple interface
-     * \brief Provides functions for field-based ("column"-based) reading.
-     * \{
-     */
-    //!\brief Read the entire file into internal buffers and retrieve the specified column.
-    template <field f>
-    friend auto & get(sequence_file_input & file)
-    {
-        static_assert(sequence_file_input::selected_field_ids::contains(f),
-                      "You requested a field via get that was not selected for the file.");
-
-        file.read_columns();
-
-        return seqan3::get<f>(file.columns_buffer);
-    }
-
-    //!\copydoc get
-    template <field f>
-    friend auto && get(sequence_file_input && file)
-    {
-        return std::move(get<f>(file));
-    }
-
-    //!\copydoc get
-    template <size_t i>
-    friend auto & get(sequence_file_input & file)
-    {
-        static_assert(i < sequence_file_input::selected_field_ids::as_array.size(),
-                      "You requested a field number larger than the number of selected fields for the file.");
-        file.read_columns();
-
-        return std::get<i>(file.columns_buffer);
-    }
-
-    //!\copydoc get
-    template <size_t i>
-    friend auto && get(sequence_file_input && file)
-    {
-        return std::move(get<i>(file));
-    }
-
-    //!\copydoc get
-    template <typename t>
-    friend auto & get(sequence_file_input & file)
-    {
-        file.read_columns();
-
-        return std::get<t>(file.columns_buffer);
-    }
-
-    //!\copydoc get
-    template <typename t>
-    friend auto && get(sequence_file_input && file)
-    {
-        return std::move(get<t>(file));
-    }
-    //!\}
-
     //!\brief The options are public and its members can be set directly.
     sequence_file_input_options<typename traits_type::sequence_legal_alphabet,
-                             selected_field_ids::contains(field::SEQ_QUAL)> options;
+                             selected_field_ids::contains(field::seq_qual)> options;
 
 protected:
     //!\privatesection
@@ -726,8 +598,6 @@ protected:
      */
     //!\brief Buffer for a single record.
     record_type record_buffer;
-    //!\brief Buffer of the entire file in columns.
-    file_as_tuple_type columns_buffer;
     //!\}
 
     /*!\name Stream / file access
@@ -776,47 +646,23 @@ protected:
         std::visit([&] (auto & f)
         {
             // read new record
-            if constexpr (selected_field_ids::contains(field::SEQ_QUAL))
+            if constexpr (selected_field_ids::contains(field::seq_qual))
             {
                 f.read_sequence_record(*secondary_stream,
                                        options,
-                                       detail::get_or_ignore<field::SEQ_QUAL>(record_buffer),
-                                       detail::get_or_ignore<field::ID>(record_buffer),
-                                       detail::get_or_ignore<field::SEQ_QUAL>(record_buffer));
+                                       detail::get_or_ignore<field::seq_qual>(record_buffer),
+                                       detail::get_or_ignore<field::id>(record_buffer),
+                                       detail::get_or_ignore<field::seq_qual>(record_buffer));
             }
             else
             {
                 f.read_sequence_record(*secondary_stream,
                                        options,
-                                       detail::get_or_ignore<field::SEQ>(record_buffer),
-                                       detail::get_or_ignore<field::ID>(record_buffer),
-                                       detail::get_or_ignore<field::QUAL>(record_buffer));
+                                       detail::get_or_ignore<field::seq>(record_buffer),
+                                       detail::get_or_ignore<field::id>(record_buffer),
+                                       detail::get_or_ignore<field::qual>(record_buffer));
             }
         }, format);
-    }
-
-    //!\brief Read the entire file into the internal column buffers.
-    void read_columns()
-    {
-        //TODO don't do multiple visits
-        //TODO create specialised version for concatenated_sequences where we append on the concat
-        auto & sequence_column_buffer = detail::get_or_ignore<field::SEQ>(columns_buffer);
-        auto &       id_column_buffer = detail::get_or_ignore<field::ID>(columns_buffer);
-        auto &     qual_column_buffer = detail::get_or_ignore<field::QUAL>(columns_buffer);
-        auto & seq_qual_column_buffer = detail::get_or_ignore<field::SEQ_QUAL>(columns_buffer);
-
-        // read the remaining records and split into column buffers
-        for (auto & rec : *this)
-        {
-            if constexpr (selected_field_ids::contains(field::SEQ))
-                sequence_column_buffer.push_back(std::move(seqan3::get<field::SEQ>(rec)));
-            if constexpr (selected_field_ids::contains(field::ID))
-                id_column_buffer.push_back(std::move(seqan3::get<field::ID>(rec)));
-            if constexpr (selected_field_ids::contains(field::QUAL))
-                qual_column_buffer.push_back(std::move(seqan3::get<field::QUAL>(rec)));
-            if constexpr (selected_field_ids::contains(field::SEQ_QUAL))
-                seq_qual_column_buffer.push_back(std::move(seqan3::get<field::SEQ_QUAL>(rec)));
-        }
     }
 
     //!\brief Befriend iterator so it can access the buffers.
@@ -870,41 +716,4 @@ sequence_file_input(stream_type & stream,
 //!\}
 
 } // namespace seqan3
-
-// ------------------------------------------------------------------
-// std-overloads for the tuple-like interface
-// ------------------------------------------------------------------
-
-namespace std
-{
-/*!\brief Provides access to the number of elements in a tuple as a compile-time constant expression.
- * \implements seqan3::unary_type_trait
- * \ingroup sequence
- * \see std::tuple_size_v
- */
-template <seqan3::sequence_file_input_traits traits_type,
-          seqan3::detail::fields_specialisation selected_field_ids,
-          seqan3::detail::type_list_of_sequence_file_input_formats valid_formats>
-struct tuple_size<seqan3::sequence_file_input<traits_type, selected_field_ids, valid_formats>>
-{
-    //!\brief The value equals the number of selected fields in the file.
-    static constexpr size_t value = selected_field_ids::as_array.size();
-};
-
-/*!\brief Obtains the type of the specified element.
- * \implements seqan3::transformation_trait
- * \ingroup sequence
- * \see [std::tuple_element](https://en.cppreference.com/w/cpp/utility/tuple/tuple_element)
- */
-template <size_t elem_no,
-          seqan3::sequence_file_input_traits traits_type,
-          seqan3::detail::fields_specialisation selected_field_ids,
-          seqan3::detail::type_list_of_sequence_file_input_formats valid_formats>
-struct tuple_element<elem_no, seqan3::sequence_file_input<traits_type, selected_field_ids, valid_formats>>
-    : tuple_element<elem_no, typename seqan3::sequence_file_input<traits_type,
-                                                                  selected_field_ids,
-                                                                  valid_formats>::file_as_tuple_type>
-{};
-
-} // namespace std
 #pragma GCC diagnostic pop

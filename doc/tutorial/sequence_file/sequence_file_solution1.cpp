@@ -47,19 +47,17 @@ write_file_dummy_struct go{};
 #include <seqan3/io/sequence_file/all.hpp>
 #include <seqan3/std/filesystem>
 
-using namespace seqan3;
-
 int main()
 {
     std::filesystem::path tmp_dir = std::filesystem::temp_directory_path(); // get the temp directory
 
-    sequence_file_input fin{tmp_dir/"my.fastq"};
+    seqan3::sequence_file_input fin{tmp_dir/"my.fastq"};
 
     for (auto & rec : fin)
     {
-        debug_stream << "ID:  "  << get<field::ID>(rec) << '\n';
-        debug_stream << "SEQ: "  << get<field::SEQ>(rec) << '\n';
-        debug_stream << "QUAL: " << get<field::QUAL>(rec) << '\n';
+        seqan3::debug_stream << "ID:  "  << seqan3::get<seqan3::field::id>(rec) << '\n';
+        seqan3::debug_stream << "SEQ: "  << seqan3::get<seqan3::field::seq>(rec) << '\n';
+        seqan3::debug_stream << "QUAL: " << seqan3::get<seqan3::field::qual>(rec) << '\n';
     }
 }
 //![solution]

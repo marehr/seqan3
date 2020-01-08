@@ -69,10 +69,10 @@ namespace seqan3
  *
  * The Sequence file abstraction supports writing four different fields:
  *
- *   1. seqan3::field::SEQ
- *   2. seqan3::field::ID
- *   3. seqan3::field::QUAL
- *   4. seqan3::field::SEQ_QUAL (sequence and qualities in one range)
+ *   1. seqan3::field::seq
+ *   2. seqan3::field::id
+ *   3. seqan3::field::qual
+ *   4. seqan3::field::seq_qual (sequence and qualities in one range)
  *
  * The member functions take any and either of these fields. If the field ID of an argument cannot be deduced, it
  * is assumed to correspond to the field ID of the respective template parameter.
@@ -106,11 +106,11 @@ namespace seqan3
  * The easiest way to write to a sequence file is to use the push_back() or emplace_back() member functions. These
  * work similarly to how they work on an std::vector. If you pass a tuple to push_back() or give arguments to
  * emplace_back() the seqan3::field ID of the i-th tuple-element/argument is assumed to be the i-th value of
- * selected_field_ids, i.e. by default the first is assumed to be seqan3::field::SEQ, the second seqan3::field::ID
- * and the third one seqan3::field::QUAL. You may give less fields than are selected if the actual format you are
+ * selected_field_ids, i.e. by default the first is assumed to be seqan3::field::seq, the second seqan3::field::id
+ * and the third one seqan3::field::qual. You may give less fields than are selected if the actual format you are
  * writing to can cope with less
- * (e.g. for FastA it is sufficient to write seqan3::field::SEQ and seqan3::field::ID, even if selected_field_ids
- * also contains seqan3::field::QUAL at the third position).
+ * (e.g. for FastA it is sufficient to write seqan3::field::seq and seqan3::field::id, even if selected_field_ids
+ * also contains seqan3::field::qual at the third position).
  *
  * You may also use the output file's iterator for writing, however, this rarely provides an advantage.
  *
@@ -152,7 +152,7 @@ namespace seqan3
  * The record-based interface treats the file as a range of tuples (the records), but in certain situations
  * you might have the data as columns, i.e. a tuple-of-ranges, instead of range-of-tuples.
  *
- * You can use column-based writing in that case, it uses operator=() :
+ * You can use column-based writing in that case, it uses operator=() and seqan3::views::zip():
  *
  * \include test/snippet/io/sequence_file/sequence_file_output_col_based_writing.cpp
  *
@@ -166,7 +166,7 @@ namespace seqan3
  *   * seqan3::format_sam
  */
 
-template <detail::fields_specialisation selected_field_ids_ = fields<field::SEQ, field::ID, field::QUAL>,
+template <detail::fields_specialisation selected_field_ids_ = fields<field::seq, field::id, field::qual>,
           detail::type_list_of_sequence_file_output_formats valid_formats_ =
               type_list<format_embl, format_fasta, format_fastq, format_genbank, format_sam>>
 class sequence_file_output
@@ -185,7 +185,7 @@ public:
     //!\}
 
     //!\brief The subset of seqan3::field IDs that are valid for this file.
-    using field_ids            = fields<field::SEQ, field::ID, field::QUAL, field::SEQ_QUAL>;
+    using field_ids            = fields<field::seq, field::id, field::qual, field::seq_qual>;
 
     static_assert([] () constexpr
                   {
@@ -199,11 +199,11 @@ public:
 
     static_assert([] () constexpr
                   {
-                      return !(selected_field_ids::contains(field::SEQ_QUAL) &&
-                               (selected_field_ids::contains(field::SEQ) ||
-                               (selected_field_ids::contains(field::QUAL))));
+                      return !(selected_field_ids::contains(field::seq_qual) &&
+                               (selected_field_ids::contains(field::seq) ||
+                               (selected_field_ids::contains(field::qual))));
                   }(),
-                  "You may not select field::SEQ_QUAL and either of field::SEQ and field::QUAL at the same time.");
+                  "You may not select field::seq_qual and either of field::seq and field::qual at the same time.");
 
     /*!\name Range associated types
      * \brief Most of the range associated types are `void` for output ranges.
@@ -390,10 +390,10 @@ public:
         requires tuple_like<record_t> &&
                  requires { requires detail::is_type_specialisation_of_v<remove_cvref_t<record_t>, record>; }
     {
-        write_record(detail::get_or_ignore<field::SEQ>(r),
-                     detail::get_or_ignore<field::ID>(r),
-                     detail::get_or_ignore<field::QUAL>(r),
-                     detail::get_or_ignore<field::SEQ_QUAL>(r));
+        write_record(detail::get_or_ignore<field::seq>(r),
+                     detail::get_or_ignore<field::id>(r),
+                     detail::get_or_ignore<field::qual>(r),
+                     detail::get_or_ignore<field::seq_qual>(r));
 
     }
 
@@ -423,10 +423,10 @@ public:
         requires tuple_like<tuple_t>
     {
         // index_of might return npos, but this will be handled well by get_or_ignore (and just return ignore)
-        write_record(detail::get_or_ignore<selected_field_ids::index_of(field::SEQ)>(t),
-                     detail::get_or_ignore<selected_field_ids::index_of(field::ID)>(t),
-                     detail::get_or_ignore<selected_field_ids::index_of(field::QUAL)>(t),
-                     detail::get_or_ignore<selected_field_ids::index_of(field::SEQ_QUAL)>(t));
+        write_record(detail::get_or_ignore<selected_field_ids::index_of(field::seq)>(t),
+                     detail::get_or_ignore<selected_field_ids::index_of(field::id)>(t),
+                     detail::get_or_ignore<selected_field_ids::index_of(field::qual)>(t),
+                     detail::get_or_ignore<selected_field_ids::index_of(field::seq_qual)>(t));
     }
 
     /*!\brief            Write a record to the file by passing individual fields.
@@ -538,76 +538,6 @@ public:
     }
     //!\}
 
-    /*!\name Tuple interface
-     * \brief Provides functions for field-based ("column"-based) writing.
-     * \{
-     */
-    /*!\brief            Write columns (wrapped in a seqan3::record) to the file.
-     * \tparam typelist  Template argument to seqan3::record, each type must be a column (range-of-range).
-     * \tparam field_ids Template argument to seqan3::record, the IDs corresponding to the columns.
-     * \param[in] r      The record of columns.
-     *
-     * \details
-     *
-     * \attention This is not part of the row-based file writing; the seqan3::record does not represent a file record,
-     * it is a tuple of the columns (with field information).
-     *
-     * ### Complexity
-     *
-     * Linear in the size of the columns.
-     *
-     * ### Exceptions
-     *
-     * Basic exception safety.
-     *
-     * ### Example
-     *
-     * \include test/snippet/io/sequence_file/sequence_file_output_col_based_writing.cpp
-     */
-    template <typename typelist, typename field_ids>
-    sequence_file_output & operator=(record<typelist, field_ids> const & r)
-    {
-        write_columns(detail::range_wrap_ignore(detail::get_or_ignore<field::SEQ>(r)),
-                      detail::range_wrap_ignore(detail::get_or_ignore<field::ID>(r)),
-                      detail::range_wrap_ignore(detail::get_or_ignore<field::QUAL>(r)),
-                      detail::range_wrap_ignore(detail::get_or_ignore<field::SEQ_QUAL>(r)));
-        return *this;
-    }
-
-    /*!\brief            Write columns (wrapped in a std::tuple) to the file.
-     * \tparam arg_types The column types, each type must be a range-of-range.
-     * \param[in] t      The tuple of columns.
-     *
-     * \details
-     *
-     * The columns are assumed to correspond to the field IDs given in selected_field_ids, however passing less
-     * is accepted if the format does not require all of them.
-     *
-     * ### Complexity
-     *
-     * Linear in the size of the columns.
-     *
-     * ### Exceptions
-     *
-     * Basic exception safety.
-     *
-     * ### Example
-     *
-     * \include test/snippet/io/sequence_file/sequence_file_output_col_based_writing.cpp
-     */
-    template <typename ...arg_types>
-    sequence_file_output & operator=(std::tuple<arg_types...> const & t)
-    {
-        // index_of might return npos, but this will be handled well by get_or_ignore (and just return ignore)
-        write_columns(
-            detail::range_wrap_ignore(detail::get_or_ignore<selected_field_ids::index_of(field::SEQ)>(t)),
-            detail::range_wrap_ignore(detail::get_or_ignore<selected_field_ids::index_of(field::ID)>(t)),
-            detail::range_wrap_ignore(detail::get_or_ignore<selected_field_ids::index_of(field::QUAL)>(t)),
-            detail::range_wrap_ignore(detail::get_or_ignore<selected_field_ids::index_of(field::SEQ_QUAL)>(t)));
-        return *this;
-    }
-    //!\}
-
     //!\brief The options are public and its members can be set directly.
     sequence_file_output_options options{};
 
@@ -651,7 +581,7 @@ protected:
     {
         static_assert(detail::decays_to_ignore_v<seq_qual_t> ||
                       (detail::decays_to_ignore_v<seq_t> && detail::decays_to_ignore_v<qual_t>),
-                      "You may not select field::SEQ_QUAL and either of field::SEQ and field::QUAL at the same time.");
+                      "You may not select field::seq_qual and either of field::seq and field::qual at the same time.");
 
         if constexpr (!detail::decays_to_ignore_v<seq_qual_t>)
             static_assert(detail::is_type_specialisation_of_v<value_type_t<seq_qual_t>, qualified>,
@@ -675,55 +605,6 @@ protected:
                                         seq,
                                         id,
                                         qual);
-            }
-        }, format);
-    }
-
-    //!\brief Write columns to file format, only tag-dispatch once.
-    template <std::ranges::input_range seqs_t,
-              std::ranges::input_range ids_t,
-              std::ranges::input_range quals_t,
-              std::ranges::input_range seq_quals_t>
-    void write_columns(seqs_t       && seqs,
-                       ids_t        && ids,
-                       quals_t      && quals,
-                       seq_quals_t  && seq_quals)
-    {
-        static_assert(!(detail::decays_to_ignore_v<reference_t<seqs_t>> &&
-                        detail::decays_to_ignore_v<reference_t<ids_t>> &&
-                        detail::decays_to_ignore_v<reference_t<quals_t>> &&
-                        detail::decays_to_ignore_v<reference_t<seq_quals_t>>),
-                      "At least one of the columns must not be set to std::ignore.");
-
-        static_assert(detail::decays_to_ignore_v<reference_t<seq_quals_t>> ||
-                      (detail::decays_to_ignore_v<reference_t<seqs_t>> &&
-                       detail::decays_to_ignore_v<reference_t<quals_t>>),
-                      "You may not select field::SEQ_QUAL and either of field::SEQ and field::QUAL at the same time.");
-
-        if constexpr (!detail::decays_to_ignore_v<reference_t<seq_quals_t>>)
-            static_assert(detail::is_type_specialisation_of_v<value_type_t<reference_t<seq_quals_t>>, qualified>,
-                          "The SEQ_QUAL field must contain a range over the seqan3::qualified alphabet.");
-
-        assert(!format.valueless_by_exception());
-        std::visit([&] (auto & f)
-        {
-            if constexpr (!detail::decays_to_ignore_v<reference_t<seq_quals_t>>)
-            {
-                auto zipped = views::zip(seq_quals, ids);
-
-                for (auto && v : zipped)
-                    f.write_sequence_record(*secondary_stream,
-                                            options,
-                                            std::get<0>(v) | views::get<0>,
-                                            std::get<1>(v),
-                                            std::get<0>(v) | views::get<1>);
-            }
-            else
-            {
-                auto zipped = views::zip(seqs, ids, quals);
-
-                for (auto && v : zipped)
-                    f.write_sequence_record(*secondary_stream, options, std::get<0>(v), std::get<1>(v), std::get<2>(v));
             }
         }, format);
     }
