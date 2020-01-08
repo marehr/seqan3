@@ -32,6 +32,7 @@ If possible, provide tooling that performs the changes, e.g. a shell-script.
 
 #### Build system
 
+* Add top-level `CMakeLists.txt` for easier integration when SeqAn3 is used as a `git submodule`.
 * `find_package(SeqAn3)` is now case-insensitive and always populates `SEQAN3_*` variables in all upper-case.
 
 #### Core
