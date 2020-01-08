@@ -38,6 +38,9 @@ Note that 3.1.0 will be the first API stable release and interfaces in this rele
 
 #### Build system
 
+* Add top-level `CMakeLists.txt`
+  ([\#1475](https://github.com/seqan/seqan3/pull/1475)).
+
 #### Core
 
 #### I/O
