@@ -26,7 +26,7 @@ else ()
     )
 endif ()
 
-find_package (seqAn3 3.0 REQUIRED HINTS ${SEQAN3_MODULE_PATH})
+find_package (SeqAn3 3.0 REQUIRED HINTS ${SEQAN3_MODULE_PATH})
 
 option(INSTALL_SEQAN3 "Enable installation of seqan3. (Projects embedding seqan3 may want to turn this OFF.)" ON)
 
