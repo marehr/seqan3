@@ -105,7 +105,7 @@ To compile it we first create a `CMakeLists.txt` file in the `source` directory:
 cmake_minimum_required (VERSION 3.4)
 project (seqan3_tutorial CXX)
 
-add_subdirectory ("${CMAKE_SOURCE_DIR}/../seqan3" seqan3-build)
+find_package (SeqAn3 3.0.0 REQUIRED HINTS "${CMAKE_SOURCE_DIR}/../seqan3/build_system")
 
 add_executable (hello_world hello_world.cpp)
 
@@ -158,7 +158,7 @@ For example, after adding `another_program.cpp` your `CMakeLists.txt` may look l
 cmake_minimum_required (VERSION 3.4)
 project (seqan3_tutorial CXX)
 
-add_subdirectory ("${CMAKE_SOURCE_DIR}/../seqan3" seqan3-build)
+find_package (SeqAn3 3.0.0 REQUIRED HINTS "${CMAKE_SOURCE_DIR}/../seqan3/build_system")
 
 add_executable (hello_world hello_world.cpp)
 add_executable (another_program another_program.cpp)
