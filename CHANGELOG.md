@@ -24,6 +24,48 @@ The following API changes should be documented as such:
 If possible, provide tooling that performs the changes, e.g. a shell-script.
 -->
 
+# 3.0.2
+
+Note that 3.1.0 will be the first API stable release and interfaces in this release might still change.
+
+## New features
+
+#### Alphabet
+
+#### Alignment
+
+#### Argument parser
+
+#### Build system
+
+#### Core
+
+#### I/O
+
+### Range
+
+#### Search
+
+### Std
+
+## API changes
+
+#### Alphabet
+
+#### Argument parser
+
+#### Build system
+
+#### Core
+
+#### I/O
+
+#### Range
+
+#### Search
+
+## Notable Bug-fixes
+
 # 3.0.1
 
 Note that 3.1.0 will be the first API stable release and interfaces in this release might still change.
