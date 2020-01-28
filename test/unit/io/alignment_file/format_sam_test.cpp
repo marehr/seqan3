@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ R"(@HD	VN:1.6	SO:coordinate	SS:coordinate:queryname	GO:none
 R"(@HD	VN:1.6
 @SQ	SN:ref	LN:34
 read1	41	ref	1	61	1S1M1D1M1I	ref	10	300	ACGT	!##$	AS:i:2	NM:i:7
-read2	42	ref	2	62	1H7M1D1M1S	=	10	300	AGGCTGNAG	!##$&'()*	xy:B:S,3,4,5
-read3	43	ref	3	63	1S1M1P1M1I1M1I1D1M1S	=	10	300	GGAGTATA	!!*+,-./
+read2	42	ref	2	62	1H7M1D1M1S2H	ref	10	300	AGGCTGNAG	!##$&'()*	xy:B:S,3,4,5
+read3	43	ref	3	63	1S1M1P1M1I1M1I1D1M1S	ref	10	300	GGAGTATA	!!*+,-./
 )"};
 
     std::string verbose_reads_input{
@@ -66,7 +66,7 @@ read3	43	ref	3	63	1S1M1P1M1I1M1I1D1M1S	=	10	300	GGAGTATA	!!*+,-./
     // formatted output
     // -----------------------------------------------------------------------------------------------------------------
 
-    std::string simple_three_reads_output{ // mate ref id is not '=' for write comparison, no hard clipping and no hard clipping
+    std::string simple_three_reads_output{ // compared to simple_three_reads_input this has no hard clipping
 R"(@HD	VN:1.6
 @SQ	SN:ref	LN:34
 read1	41	ref	1	61	1S1M1D1M1I	ref	10	300	ACGT	!##$	AS:i:2	NM:i:7
@@ -170,6 +170,15 @@ TEST_F(sam_format, header_errors)
     }
 }
 
+TEST_F(sam_format, no_hd_line_in_header)
+{
+    // the header line (@HD) is optional
+    std::istringstream istream{std::string{"@SQ\tSN:ref\tLN:34\nread1\t41\tref\t1\t61\t*\tref\t10\t300\tACGT\t!##$\n"}};
+    alignment_file_input fin{istream, format_sam{}, fields<field::id>{}};
+
+    EXPECT_EQ(get<field::id>(*fin.begin()), std::string{"read1"});
+}
+
 TEST_F(sam_format, windows_file)
 {
     std::istringstream istream(std::string("read1\t41\tref\t1\t61\t*\tref\t10\t300\tACGT\t!##$\r\n"));
@@ -214,7 +223,6 @@ TEST_F(sam_format, format_error_invalid_arithmetic_value)
         EXPECT_THROW(fin.begin(), format_error);
     }
 }
-
 
 TEST_F(sam_format, format_error_invalid_cigar)
 {

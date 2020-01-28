@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE
 // -----------------------------------------------------------------------------------------------------
@@ -231,11 +231,7 @@ public:
 
         path tmp_path;
 
-#if defined(_WIN32)
-        tmp_path = std::string{getenv("UserProfile")};
-#else
-        tmp_path = std::string{getenv("HOME")};
-#endif
+        tmp_path = std::string{getenv(home_env_name)};
         tmp_path /= ".config";
 
         // First, create .config if it does not already exist.
@@ -428,6 +424,16 @@ public:
         "[APP INFO] :: A new version of this application is now available.\n"
         "[APP INFO] :: If you don't wish to receive further notifications, set --version-check OFF.\n\n";
         /*Might be extended if a url is given on construction.*/
+
+    //!\brief The environment name of the home environment used by getenv()
+    static constexpr char const * home_env_name
+    {
+#if defined(_WIN32)
+        "UserProfile"
+#else
+        "HOME"
+#endif
+    };
 
     //!\brief The application name.
     std::string name;

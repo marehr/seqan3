@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -65,9 +65,7 @@ struct iterator_fixture<alignment_range_iterator> : ::testing::Test
     std::vector<size_t> expected_range{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 };
 
-INSTANTIATE_TYPED_TEST_CASE_P(alignment_range_iterator,
-                              iterator_fixture,
-                              alignment_range_iterator);
+INSTANTIATE_TYPED_TEST_SUITE_P(alignment_range_iterator, iterator_fixture, alignment_range_iterator, );
 
 // ----------------------------------------------------------------------------
 // Testing alignment range concepts and interfaces.

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ private:
          * \{
          */
         //!\brief Type for distances between iterators.
-        using difference_type = typename it_t::difference_type;
+        using difference_type = typename std::iter_difference_t<it_t>;
         //!\brief Value type of this iterator.
         using value_type = size_t;
         //!\brief The pointer type.

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ TEST(html_format, empty_information)
                            "<h2>Version</h2>\n"
                            "<strong>Last update:</strong> <br>\n"
                            "<strong>empty_options version:</strong> <br>\n"
-                           "<strong>SeqAn version:</strong> 3.0.0<br>\n"
+                           "<strong>SeqAn version:</strong> " + seqan3_version + "<br>\n"
                            "<br>\n"
                            "</body></html>");
     EXPECT_EQ(my_stdout, expected);
@@ -169,7 +169,7 @@ TEST(html_format, full_information_information)
                           "<h2>Version</h2>\n"
                           "<strong>Last update:</strong> <br>\n"
                           "<strong>program_full_options version:</strong> <br>\n"
-                          "<strong>SeqAn version:</strong> 3.0.0<br>\n"
+                          "<strong>SeqAn version:</strong> " + seqan3_version + "<br>\n"
                           "<h2>Url</h2>\n"
                           "www.seqan.de<br>\n"
                           "<br>\n"

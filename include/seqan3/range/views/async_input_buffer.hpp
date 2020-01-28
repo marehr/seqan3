@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -203,16 +203,17 @@ public:
     //!\}
 
     /*!\name Construction, destruction and assignment
+     * \brief Not explicitly `noexcept` because this depends on construction/copy/... of value_type.
      * \{
      */
-    async_input_buffer_iterator()                                                    noexcept = default; //!< Defaulted.
+    async_input_buffer_iterator()                                                    = default; //!< Defaulted.
     //TODO: delete:
-    async_input_buffer_iterator(async_input_buffer_iterator const & rhs)             noexcept = default; //!< Defaulted.
-    async_input_buffer_iterator(async_input_buffer_iterator && rhs)                  noexcept = default; //!< Defaulted.
+    async_input_buffer_iterator(async_input_buffer_iterator const & rhs)             = default; //!< Defaulted.
+    async_input_buffer_iterator(async_input_buffer_iterator && rhs)                  = default; //!< Defaulted.
     //TODO: delete:
-    async_input_buffer_iterator & operator=(async_input_buffer_iterator const & rhs) noexcept = default; //!< Defaulted.
-    async_input_buffer_iterator & operator=(async_input_buffer_iterator && rhs)      noexcept = default; //!< Defaulted.
-    ~async_input_buffer_iterator()                                                   noexcept = default; //!< Defaulted.
+    async_input_buffer_iterator & operator=(async_input_buffer_iterator const & rhs) = default; //!< Defaulted.
+    async_input_buffer_iterator & operator=(async_input_buffer_iterator && rhs)      = default; //!< Defaulted.
+    ~async_input_buffer_iterator()                                          noexcept = default; //!< Defaulted.
 
     //!\brief Constructing from the underlying seqan3::async_input_buffer_view.
     async_input_buffer_iterator(contrib::fixed_buffer_queue<value_type_t<urng_t>> & buffer) noexcept :

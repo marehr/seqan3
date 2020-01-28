@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -67,8 +67,8 @@
 
 // Ranges [required]
 #if __has_include(<range/v3/version.hpp>)
-#   define RANGE_V3_MINVERSION 900
-#   define RANGE_V3_MAXVERSION 999
+#   define RANGE_V3_MINVERSION 1000
+#   define RANGE_V3_MAXVERSION 1099
 // TODO the following doesn't actually show the current version, only its formula. How'd you do it?
 #   define MSG "Your version: " STR(RANGE_V3_VERSION) \
                 "; minimum version: " STR(RANGE_V3_MINVERSION) \

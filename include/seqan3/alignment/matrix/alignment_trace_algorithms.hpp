@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -136,12 +136,12 @@ inline alignment_t alignment_trace(database_t && database,
         {
             coordinate.col = std::max<size_t>(coordinate.col, 1) - 1;
             --end_aligned_db;
-            insert_gap(std::get<1>(aligned_seq), end_aligned_qy);
+            end_aligned_qy = insert_gap(std::get<1>(aligned_seq), end_aligned_qy);
         }
         else if ((dir & U) == U)
         {
             coordinate.row = std::max<size_t>(coordinate.row, 1) - 1;
-            insert_gap(std::get<0>(aligned_seq), end_aligned_db);
+            end_aligned_db = insert_gap(std::get<0>(aligned_seq), end_aligned_db);
             --end_aligned_qy;
         }
         else if ((dir & D) == D)

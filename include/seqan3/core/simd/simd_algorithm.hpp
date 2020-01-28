@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ constexpr simd_t extract_halve(simd_t const & src)
     if constexpr (simd_traits<simd_t>::length < 2) // In case there are less elements available return unchanged value.
         return src;
     else // if constexpr (simd_traits<simd_t>::max_length == 16) // SSE4
-        return extract_halve_sse4(src);
+        return detail::extract_halve_sse4<index>(src);
 }
 //!\endcond
 
@@ -204,7 +204,7 @@ constexpr simd_t extract_quarter(simd_t const & src)
     if constexpr (simd_traits<simd_t>::length < 4) // In case there are less elements available return unchanged value.
         return src;
     else // if constexpr (simd_traits<simd_t>::max_length == 16) // SSE4
-        return extract_quarter_sse4(src);
+        return detail::extract_quarter_sse4<index>(src);
 }
 //!\endcond
 
@@ -248,7 +248,7 @@ constexpr simd_t extract_eighth(simd_t const & src)
     if constexpr (simd_traits<simd_t>::length < 8) // In case there are less elements available return unchanged value.
         return src;
     else // if constexpr (simd_traits<simd_t>::max_length == 16) // SSE4
-        return extract_eighth_sse4(src);
+        return detail::extract_eighth_sse4<index>(src);
 }
 //!\endcond
 

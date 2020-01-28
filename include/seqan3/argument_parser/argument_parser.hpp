@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2020, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2020, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ public:
 
     /*!\brief Adds a positional option to the seqan3::argument_parser.
      *
-     * \tparam option_type Must have a formateted input function (stream >> value).
+     * \tparam option_type Must have a formatted input function (stream >> value).
      *                     If option_type is a container, its value type must have the
      *                     formateted input function (exception: std::string is not
      *                     regarded as a container).
