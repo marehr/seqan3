@@ -12370,14 +12370,15 @@ async function run() {
         const time = (new Date()).toTimeString();
         core.setOutput("time", time);
         const doxygen_version = "1.8.17";
-        
-        const doxygen_archive = await tc.downloadTool(
+
+        const doxygen_archive = await tool_cache.downloadTool(
             'https://sourceforge.net/projects/doxygen/files/'+
             'rel-' + doxygen_version + '/doxygen-' + doxygen_version + '.linux.bin.tar.gz');
-            
-        const doxygen_bin_folder = await tc.extractTar(doxygen_archive, '/tmp/doxygen-' + doxygen_version + '/bin');
 
-        const cached_path = await tc.cacheDir(doxygen_bin_folder, 'doxygen', doxygen_version);
+        const doxygen_bin_folder = await tool_cache.extractTar(
+            doxygen_archive, '/tmp/doxygen-' + doxygen_version + '/bin');
+
+        const cached_path = await tool_cache.cacheDir(doxygen_bin_folder, 'doxygen', doxygen_version);
         core.addPath(cached_path);
 
     } catch (error) {
