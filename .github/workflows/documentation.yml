@@ -15,20 +15,21 @@ jobs:
         id: hello
         with:
           who-to-greet: 'Mona the Octocat'
+          doxygen-version: 1.8.17
 
       - name: Print Current Brach
         shell: bash
         run: echo The target branch name is ${GITHUB_REF#refs/heads/}
 
-      - name: Setup Doxygen
-        env:
-          DOXYGEN_VER: 1.8.17
-        shell: bash
-        run: |
-          mkdir -p /tmp/doxygen-download
-          wget --no-clobber --quiet --directory-prefix=/tmp/doxygen-download/ https://sourceforge.net/projects/doxygen/files/rel-${DOXYGEN_VER}/doxygen-${DOXYGEN_VER}.linux.bin.tar.gz
-          tar -C /tmp/ -zxf /tmp/doxygen-download/doxygen-${DOXYGEN_VER}.linux.bin.tar.gz
-          echo "::add-path::/tmp/doxygen-${DOXYGEN_VER}/bin" # Only available in subsequent steps!
+      # - name: Setup Doxygen
+      #   env:
+      #     DOXYGEN_VER: 1.8.17
+      #   shell: bash
+      #   run: |
+      #     mkdir -p /tmp/doxygen-download
+      #     wget --no-clobber --quiet --directory-prefix=/tmp/doxygen-download/ https://sourceforge.net/projects/doxygen/files/rel-${DOXYGEN_VER}/doxygen-${DOXYGEN_VER}.linux.bin.tar.gz
+      #     tar -C /tmp/ -zxf /tmp/doxygen-download/doxygen-${DOXYGEN_VER}.linux.bin.tar.gz
+      #     echo "::add-path::/tmp/doxygen-${DOXYGEN_VER}/bin" # Only available in subsequent steps!
 
       - name: Setup CMake
         env:
