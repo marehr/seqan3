@@ -5,7 +5,7 @@
   "description": "setup doxygen action",
   "main": "src/setup-doxygen.js",
   "scripts": {
-    "build": "ncc build",
+    "build": "ncc build src/setup-doxygen.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
