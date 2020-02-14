@@ -12363,7 +12363,7 @@ const github = __webpack_require__(469);
 const tool_cache = __webpack_require__(533);
 
 async function download_node(version) {
-    const cached_tool_path = tc.find('doxygen', version);
+    const cached_tool_path = tool_cache.find('doxygen', version);
 
     // there is a cached version of doxygen, use it
     if (cached_tool_path) {
