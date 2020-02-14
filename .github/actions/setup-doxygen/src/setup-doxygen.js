@@ -3,7 +3,7 @@ const github = require('@actions/github');
 const tool_cache = require('@actions/tool-cache');
 
 async function download_node(version) {
-    const cached_tool_path = tc.find('doxygen', version);
+    const cached_tool_path = tool_cache.find('doxygen', version);
 
     // there is a cached version of doxygen, use it
     if (cached_tool_path) {
