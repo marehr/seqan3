@@ -45,8 +45,8 @@ jobs:
         shell: bash
         run: |
             echo "PATH: ${PATH}"
-            echo "cmake --version"
-            echo "doxygen --version"
+            cmake --version
+            doxygen --version
 
       # - name: Install Dependencies
       #   run: sudo apt-get install texlive-font-utils ghostscript texlive-latex-extra graphviz # graphviz for dot, latex to parse formulas

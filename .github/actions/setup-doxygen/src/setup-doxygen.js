@@ -2,6 +2,16 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const tool_cache = require('@actions/tool-cache');
 
+async function download_node(version) {
+    let tool_path;
+    tool_path = tc.find('doxygen', version);
+
+    // there is a cached version of doxygen, use it
+    if (tool_path) return tool_path;
+
+    // acquire doxygen
+}
+
 async function run() {
     try {
         // `who-to-greet` input defined in action metadata file
@@ -24,10 +34,10 @@ async function run() {
             doxygen_archive, `/tmp`);
         console.log(`doxygen_extracted_folder: ${doxygen_extracted_folder}`);
 
-        const doxygen_folder = `${doxygen_extracted_folder}/doxygen-${doxygen_version}`;
-        console.log(`doxygen_extracted_folder: ${doxygen_extracted_folder}`);
-
-        const doxygen_cache_path = await tool_cache.cacheDir(doxygen_folder, 'doxygen', doxygen_version);
+        // i.e. will be /opt/hostedtoolcache/doxygen/1.8.17/x64
+        const doxygen_cache_path = await tool_cache.cacheDir(
+            `${doxygen_extracted_folder}/doxygen-${doxygen_version}`,
+            'doxygen', doxygen_version);
         console.log(`doxygen_cache_path: ${doxygen_cache_path}`);
 
         // add this path to $PATH for subsequent setos
