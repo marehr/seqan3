@@ -12373,7 +12373,7 @@ async function run() {
         console.log(`Hello ${nameToGreet}!`);
         console.log(`Hello ${version}!`);
         // const time = (new Date()).toTimeString();
-        core.setOutput("time", time);
+        // core.setOutput("time", time);
         const doxygen_version = "1.8.17";
 
         const doxygen_archive = await tool_cache.downloadTool(
