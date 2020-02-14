@@ -958,20 +958,20 @@ async function download_node(version) {
     }
 
     // acquire cmake
-    console.log(`Attempt to download cmake ${version}.`);
-    const cmake_archive = await tool_cache.downloadTool(
-        `https://sourceforge.net/projects/cmake/files/rel-${version}/cmake-${version}.linux.bin.tar.gz`);
+    const download_url = `https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}-Linux-x86_64.tar.gz`;
+    console.log(`Attempt to download cmake ${version} (${download_url}).`);
+    const cmake_archive = await tool_cache.downloadTool(download_url);
     console.log(`Download seems to be a success (${cmake_archive}).`);
 
     console.log(`Attempt to unpack cmake ${version}.`);
     const cmake_extracted_folder = await tool_cache.extractTar(
-        cmake_archive, `/tmp`);
+        cmake_archive, `/tmp/cmake-${version}`);
     console.log(`Unpack seems to be a success (${cmake_extracted_folder}).`);
 
     console.log(`Cache cmake ${version}.`);
     // i.e. will be /opt/hostedtoolcache/cmake/1.8.17/x64
     return await tool_cache.cacheDir(
-        `${cmake_extracted_folder}/cmake-${version}`,
+        `${cmake_extracted_folder}/cmake-${version}-Linux-x86_64/`,
         'cmake', version);
 }
 
