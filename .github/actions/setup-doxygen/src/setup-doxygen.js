@@ -1,5 +1,5 @@
 const core = require('@actions/core');
-const github = require('@actions/github');
+// const github = require('@actions/github');
 const tool_cache = require('@actions/tool-cache');
 
 async function download_node(version) {
