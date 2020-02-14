@@ -15,14 +15,6 @@ jobs:
         with:
           doxygen-version: 1.8.17
 
-      - name: Diagnostics
-        shell: bash
-        run: |
-            echo The target branch name is ${GITHUB_REF#refs/heads/}
-            echo "PATH: ${PATH}"
-            echo "CMAKE: ${cmake --version}"
-            echo "DOXYGEN: ${doxygen --version}"
-
       - name: Setup CMake
         env:
           CMAKE_VERSION: 3.7.2
@@ -32,6 +24,14 @@ jobs:
           wget --no-clobber --quiet --directory-prefix=/tmp/cmake-download/ https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
           tar -C /tmp/ -zxf /tmp/cmake-download/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
           echo "::add-path::/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin" # Only available in subsequent steps!
+
+      - name: Diagnostics
+        shell: bash
+        run: |
+            echo The target branch name is ${GITHUB_REF#refs/heads/}
+            echo "PATH: ${PATH}"
+            echo "CMAKE: `cmake --version`"
+            echo "DOXYGEN: `doxygen --version`"
 
       # - name: Install Dependencies
       #   run: sudo apt-get install texlive-font-utils ghostscript texlive-latex-extra graphviz # graphviz for dot, latex to parse formulas
