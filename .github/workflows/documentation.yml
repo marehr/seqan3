@@ -16,14 +16,9 @@ jobs:
           doxygen-version: 1.8.17
 
       - name: Setup CMake
-        env:
-          CMAKE_VERSION: 3.7.2
-        shell: bash
-        run: |
-          mkdir -p /tmp/cmake-download
-          wget --no-clobber --quiet --directory-prefix=/tmp/cmake-download/ https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
-          tar -C /tmp/ -zxf /tmp/cmake-download/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
-          echo "::add-path::/tmp/cmake-${CMAKE_VERSION}-Linux-x86_64/bin" # Only available in subsequent steps!
+        uses: ./.github/actions/setup-cmake
+        with:
+          cmake-version: 3.7.2
 
       - name: Diagnostics
         shell: bash
