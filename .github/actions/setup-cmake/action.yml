@@ -1,0 +1,10 @@
+name: 'Setup cmake environment'
+description: 'Setup a cmake environment and add it to the PATH'
+author: 'marehr'
+inputs:
+  cmake-version:  # id of input
+    description: 'The version to use. Examples: 1.8.17'
+    required: true
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
