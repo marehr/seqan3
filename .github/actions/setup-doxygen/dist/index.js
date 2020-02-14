@@ -12389,7 +12389,7 @@ async function download_node(version) {
 async function run() {
     try {
         let version = core.getInput('version');
-        if (!doxygen_version) {
+        if (!version) {
             version = core.getInput('doxygen-version');
         }
         console.log(`Requested doxygen ${version}.`);
