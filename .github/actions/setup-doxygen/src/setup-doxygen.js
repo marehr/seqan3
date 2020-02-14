@@ -13,13 +13,16 @@ async function download_node(version) {
 
     // acquire doxygen
     console.log(`Attempt to download doxygen ${version}.`);
-
     const doxygen_archive = await tool_cache.downloadTool(
         `https://sourceforge.net/projects/doxygen/files/rel-${version}/doxygen-${version}.linux.bin.tar.gz`);
+    console.log(`Download seems to be a success (${doxygen_archive}).`);
 
+    console.log(`Attempt to unpack doxygen ${version}.`);
     const doxygen_extracted_folder = await tool_cache.extractTar(
         doxygen_archive, `/tmp`);
+    console.log(`Unpack seems to be a success (${doxygen_extracted_folder}).`);
 
+    console.log(`Cache doxygen ${version}.`);
     // i.e. will be /opt/hostedtoolcache/doxygen/1.8.17/x64
     return await tool_cache.cacheDir(
         `${doxygen_extracted_folder}/doxygen-${version}`,
