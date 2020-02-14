@@ -1,15 +1,19 @@
 {
   "name": "setup-doxygen",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "private": true,
   "description": "setup doxygen action",
-  "main": "setup-doxygen.js",
+  "main": "src/setup-doxygen.js",
   "scripts": {
+    "build": "ncc build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "actions"
+    "actions",
+    "doxygen",
+    "setup"
   ],
-  "author": "Marcel Ehrhardt",
+  "author": "marehr",
   "license": "BSD-3-Clause",
   "dependencies": {
     "@actions/core": "^1.2.2",
