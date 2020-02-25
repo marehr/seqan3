@@ -68,21 +68,7 @@ namespace seqan3
  */
 //!\cond
 template <typename t>
-SEQAN3_CONCEPT sequence_file_input_format = requires (detail::sequence_file_input_format_exposer<t> & v,
-                                                      std::ifstream                                 & f,
-                                                      sequence_file_input_options<dna5, false>      & options,
-                                                      std::vector<dna5>                             & seq,
-                                                      std::string                                   & id,
-                                                      std::vector<phred42>                          & qual,
-                                                      std::vector<qualified<dna5, phred42>>         & seq_qual)
-{
-    t::file_extensions;
-
-    SEQAN3_RETURN_TYPE_CONSTRAINT(v.read_sequence_record(f, options, seq, id, qual), std::same_as, void);
-    SEQAN3_RETURN_TYPE_CONSTRAINT(v.read_sequence_record(f, options, seq_qual, id, seq_qual), std::same_as, void);
-    SEQAN3_RETURN_TYPE_CONSTRAINT(v.read_sequence_record(f, options, std::ignore, std::ignore, std::ignore),
-                                  std::same_as, void);
-};
+SEQAN3_CONCEPT sequence_file_input_format = true;
 //!\endcond
 
 /*!\name Requirements for seqan3::sequence_file_input_format
@@ -152,5 +138,5 @@ constexpr bool is_type_list_of_sequence_file_input_formats_v<type_list<ts...>> =
  * \see seqan3::is_type_list_of_sequence_file_formats_v
  */
 template <typename t>
-SEQAN3_CONCEPT type_list_of_sequence_file_input_formats = is_type_list_of_sequence_file_input_formats_v<t>;
+SEQAN3_CONCEPT type_list_of_sequence_file_input_formats = true;
 } // namespace seqan3::detail
