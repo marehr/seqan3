@@ -15,9 +15,9 @@ struct sequence_file_input_format
         using sequence_t = detail::streambuf_subrange<char_t, traits_t>;
         using quality_t = detail::streambuf_subrange<char_t, traits_t>;
 
-        id_t id{}; // figure out typical length of id
-        sequence_t sequence{}; // figure out typical length of sequence
-        quality_t quality{}; // figure out typical length of sequence
+        id_t id{80}; // figure out typical length of id
+        sequence_t sequence{200}; // figure out typical length of sequence
+        quality_t quality{200}; // figure out typical length of sequence
 
         void clear()
         {
