@@ -18,7 +18,7 @@ struct parser_istream
 
     auto begin()
     {
-        return seqan3::detail::fast_istreambuf_iterator<char_t, traits_t>{buffer};
+        return it;
     }
 
     auto end()
@@ -92,6 +92,7 @@ struct parser_istream
     }
 
     istreambuf buffer;
+    seqan3::detail::fast_istreambuf_iterator<char_t, traits_t> it{buffer};
 };
 
 template <typename char_t, typename traits_t>
