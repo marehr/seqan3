@@ -144,6 +144,32 @@ protected:
     // friend iterator;
 };
 
+
+template <typename __TODO__>
+struct sequence_file_input<__TODO__>::record
+{
+    using container_t = std::string;
+
+    container_t & id()
+    {
+        return _id;
+    }
+
+    container_t & sequence()
+    {
+        return _sequence;
+    }
+
+    container_t & quality()
+    {
+        return _quality;
+    }
+
+    container_t _id{};
+    container_t _sequence{};
+    container_t _quality{};
+};
+
 template <typename __TODO__>
 struct sequence_file_input<__TODO__>::iterator
 {
@@ -182,29 +208,6 @@ struct sequence_file_input<__TODO__>::iterator
     sequence_file_input & parent;
     record _record{};
     bool _record_empty = true;
-};
-
-template <typename __TODO__>
-struct sequence_file_input<__TODO__>::record
-{
-    std::string & id()
-    {
-        return _id;
-    }
-
-    std::string & sequence()
-    {
-        return _sequence;
-    }
-
-    std::string & quality()
-    {
-        return _quality;
-    }
-
-    std::string _id{};
-    std::string _sequence{};
-    std::string _quality{};
 };
 
 // /*!\name Type deduction guides
