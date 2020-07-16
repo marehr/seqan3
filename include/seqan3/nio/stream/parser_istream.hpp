@@ -76,6 +76,12 @@ struct parser_istream
     }
 
     template <typename predicate_t>
+    void drop_until(predicate_t && predicate)
+    {
+        _advance_while<true>(predicate);
+    }
+
+    template <typename predicate_t>
     void take_until(streambuf_subrange_t & subrange, predicate_t && predicate)
     {
         capture_start(subrange);

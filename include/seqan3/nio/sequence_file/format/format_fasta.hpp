@@ -23,13 +23,6 @@ struct format_fasta : public sequence_file_input_format<char>
         read_sequence<true>(record.sequence, parser);
     }
 
-    static constexpr auto const is_id = [](char const chr)
-    {
-        bool success = chr == '>' || chr == ';';
-        // std::cout << "is_id(chr): " << chr << " :: " << success << std::endl;
-        return success;
-    };
-
     static constexpr auto const is_blank = [](char const chr)
     {
         bool success = chr == '\t' || chr == ' ';
@@ -40,6 +33,13 @@ struct format_fasta : public sequence_file_input_format<char>
     static constexpr auto const is_space = [](char const chr)
     {
         bool success = ('\t' <= chr && chr <= '\r') || chr == ' ';
+        // std::cout << "is_space(chr): " << chr << " :: " << success << std::endl;
+        return success;
+    };
+
+    static constexpr auto const is_newline = [](char const chr)
+    {
+        bool success = chr == '\n';
         // std::cout << "is_space(chr): " << chr << " :: " << success << std::endl;
         return success;
     };
@@ -58,10 +58,24 @@ struct format_fasta : public sequence_file_input_format<char>
         return success;
     };
 
+    static constexpr auto const fasta_id_start_token = [](char const chr)
+    {
+        bool success = chr == '>' || chr == ';';
+        // std::cout << "fasta_id_start_token(chr): " << chr << " :: " << success << std::endl;
+        return success;
+    };
+
+    static constexpr auto const fasta_truncate_id_token = [](char const chr)
+    {
+        bool success = is_cntrl(chr) || is_blank(chr);
+        // std::cout << "fasta_id_start_token(chr): " << chr << " :: " << success << std::endl;
+        return success;
+    };
+
     template <bool truncate_ids>
     void read_id(typename record_buffer::id_t & id, parser_istream<char> & parser)
     {
-        if (!parser.advance_if(is_id))
+        if (!parser.advance_if(fasta_id_start_token))
             throw std::runtime_error{"ERROR: expected id character"};
 
         // skip blanks
@@ -72,19 +86,15 @@ struct format_fasta : public sequence_file_input_format<char>
         // bool at_delimiter = false;
         // std::cout << "capture id" << std::endl;
         // until first blank or first cntrl character
-        parser.take_until(id, [](char chr)
+        if constexpr (truncate_ids)
         {
-            if constexpr (truncate_ids)
-                return is_cntrl(chr) || is_blank(chr);
-            else
-                return chr == '\n';
-        });
-
-        if constexpr(truncate_ids)
-            parser.drop_while([](char chr)
-            {
-                return chr != '\n';
-            });
+            parser.take_until(id, fasta_truncate_id_token);
+            parser.drop_until(is_newline);
+        }
+        else
+        {
+            parser.take_until(id, is_newline);
+        }
 
         if (parser.at_eof())
             throw std::runtime_error{"FastA ID line did not end in newline."};
@@ -103,7 +113,7 @@ struct format_fasta : public sequence_file_input_format<char>
                 return is_space(chr) || is_digit(chr);
         };
 
-        parser.take_until_but_ignore(sequence, is_id, ignore_whitespaces);
+        parser.take_until_but_ignore(sequence, fasta_id_start_token, ignore_whitespaces);
     }
 };
 
