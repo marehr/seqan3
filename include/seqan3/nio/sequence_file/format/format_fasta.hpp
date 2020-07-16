@@ -98,30 +98,12 @@ struct format_fasta : public sequence_file_input_format<char>
         auto const ignore_whitespaces = [](char chr)
         {
             if constexpr (seqan2_parsing)
-                return is_space(chr) /*|| is_digit(chr)*/;
+                return is_space(chr);
             else
                 return is_space(chr) || is_digit(chr);
         };
 
-        auto const fasta_begin_token = [&](char chr)
-        {
-            return is_id(chr) || ignore_whitespaces(chr);
-        };
-
-        while (true)
-        {
-            // skip space or digit character
-            // std::cout << "skip spaces / digits" << std::endl;
-            parser.drop_while(ignore_whitespaces);
-
-            // stop reading the sequence if we found the start character of the next id, i.e. ">"
-            if (parser.at_eof() || parser.char_is(is_id))
-                return;
-
-            // read (possible empty) sequence (until the first id, space or digit)
-            // std::cout << "capture sequence" << std::endl;
-            parser.take_until(sequence, fasta_begin_token);
-        }
+        parser.take_until_but_ignore(sequence, is_id, ignore_whitespaces);
     }
 };
 

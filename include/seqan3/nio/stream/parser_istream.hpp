@@ -72,19 +72,53 @@ struct parser_istream
     template <typename predicate_t>
     void drop_while(predicate_t && predicate)
     {
-        _skip_while<false>(predicate);
+        _advance_while<false>(predicate);
     }
 
     template <typename predicate_t>
     void take_until(streambuf_subrange_t & subrange, predicate_t && predicate)
     {
         capture_start(subrange);
-        _skip_while<true>(predicate);
+        _advance_while<true>(predicate);
         capture_end();
     }
 
+    template <typename predicate_t, typename ignore_t>
+    inline void take_until_but_ignore(streambuf_subrange_t & subrange, predicate_t && predicate, ignore_t && ignore)
+    {
+        while (true)
+        {
+            drop_while(ignore);
+
+            if (at_eof() || char_is(predicate))
+                return;
+
+            capture_start(subrange);
+            _advance_while<true>(predicate, ignore);
+            capture_end();
+        }
+    }
+
+    static constexpr auto always_true = [](char_t chr) -> bool
+    {
+        return true;
+    };
+
+    template <bool value>
+    static constexpr auto always = [](char_t) -> bool
+    {
+        return value;
+    };
+
     template <bool predicate_is, typename predicate_t>
-    void _skip_while(predicate_t && predicate)
+    void _advance_while(predicate_t && predicate)
+    {
+        // Note: Compiler optimizes the ignore parameter away
+        _advance_while<predicate_is>(predicate, always<!predicate_is>);
+    }
+
+    template <bool predicate_is, typename predicate_t, typename ignore_t>
+    void _advance_while(predicate_t && predicate, ignore_t && ignore)
     {
         while (!buffer.at_eof())
         {
@@ -97,7 +131,7 @@ struct parser_istream
             for (; it != sentinel; ++it)
             {
                 char_t chr = *it;
-                if (predicate(chr) == predicate_is)
+                if (predicate(chr) == predicate_is || ignore(chr) == predicate_is)
                 {
                     predicate_found = true;
                     break;
