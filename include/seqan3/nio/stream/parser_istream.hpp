@@ -86,10 +86,35 @@ struct parser_istream
     template <bool predicate_is, typename predicate_t>
     void _skip_while(predicate_t && predicate)
     {
-        for (char chr: *this)
+        while (!buffer.at_eof())
         {
-            if (predicate(chr) == predicate_is)
+            char_t * const begin = buffer.gptr();
+            char_t * it = begin;
+            char_t * const sentinel = buffer.egptr();
+            bool predicate_found{false};
+
+            // iterate over chunk
+            for (; it != sentinel; ++it)
+            {
+                char_t chr = *it;
+                if (predicate(chr) == predicate_is)
+                {
+                    predicate_found = true;
+                    break;
+                }
+            }
+
+            // inform buffer how much we read from the chunk
+            buffer.gbump(it - begin);
+
+            if (predicate_found)
                 break;
+
+            // we are at the end of the current chunk
+            assert(buffer.at_eof());
+
+            // acquire next chunk
+            buffer.underflow();
         }
     }
 
@@ -117,6 +142,8 @@ struct parser_istream<char_t, traits_t>::istreambuf : public std::basic_streambu
     using int_type = typename traits_t::int_type;
 
     using base_t::gptr;
+    using base_t::egptr;
+    using base_t::gbump;
 
     virtual int_type underflow() override
     {
@@ -146,7 +173,7 @@ struct parser_istream<char_t, traits_t>::istreambuf : public std::basic_streambu
 
     bool at_eof()
     {
-        return gptr() == this->egptr();
+        return gptr() == egptr();
     }
 
     void buffer_updates_this()
