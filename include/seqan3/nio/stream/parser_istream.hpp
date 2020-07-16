@@ -98,66 +98,66 @@ struct parser_istream
 template <typename char_t, typename traits_t>
 struct parser_istream<char_t, traits_t>::istreambuf : public std::basic_streambuf<char_t, traits_t>
 {
-   using base_t = std::basic_streambuf<char_t, traits_t>;
-   using exposed_base_t = seqan3::detail::stream_buffer_exposer<char_t, traits_t>;
+    using base_t = std::basic_streambuf<char_t, traits_t>;
+    using exposed_base_t = seqan3::detail::stream_buffer_exposer<char_t, traits_t>;
 
-   istreambuf(parser_istream & parent, base_t & buffer_)
-       : parent{parent}, buffer{reinterpret_cast<exposed_base_t &>(buffer_)}
-   {
-       buffer_updates_this();
-   }
+    istreambuf(parser_istream & parent, base_t & buffer_)
+        : parent{parent}, buffer{reinterpret_cast<exposed_base_t &>(buffer_)}
+    {
+        buffer_updates_this();
+    }
 
-   virtual ~istreambuf()
-   {
-       this_updates_buffer();
-   }
+    virtual ~istreambuf()
+    {
+        this_updates_buffer();
+    }
 
-   using int_type = typename traits_t::int_type;
+    using int_type = typename traits_t::int_type;
 
-   using base_t::gptr;
+    using base_t::gptr;
 
-   virtual int_type underflow() override
-   {
-       // std::cout << "underflow?! \n" << std::endl;
-       if (!at_eof())
-           return traits_t::to_int_type(*gptr());
+    virtual int_type underflow() override
+    {
+        // std::cout << "underflow?! \n" << std::endl;
+        if (!at_eof())
+            return traits_t::to_int_type(*gptr());
 
-       // std::cout << "underflow real?! \n" << std::endl;
-       if (parent.subrange != nullptr)
-       {
-           assert(gptr() != nullptr);
-           // std::cout << "gptr(): " << reinterpret_cast<size_t>(gptr()) << std::endl;
-           parent.subrange->segment_end(gptr());
-           parent.subrange->flush();
-           // std::cout << "gptr(): " << reinterpret_cast<size_t>(gptr()) << std::endl;
-       }
+        // std::cout << "underflow real?! \n" << std::endl;
+        if (parent.subrange != nullptr)
+        {
+            assert(gptr() != nullptr);
+            // std::cout << "gptr(): " << reinterpret_cast<size_t>(gptr()) << std::endl;
+            parent.subrange->segment_end(gptr());
+            parent.subrange->flush();
+            // std::cout << "gptr(): " << reinterpret_cast<size_t>(gptr()) << std::endl;
+        }
 
-       this_updates_buffer();
-       int_type c = buffer.underflow();
-       buffer_updates_this();
+        this_updates_buffer();
+        int_type c = buffer.underflow();
+        buffer_updates_this();
 
-       if (parent.subrange != nullptr && c != traits_t::eof())
-           parent.subrange->segment_start(gptr());
+        if (parent.subrange != nullptr && c != traits_t::eof())
+            parent.subrange->segment_start(gptr());
 
-       return c;
-   };
+        return c;
+    };
 
-   bool at_eof()
-   {
-       return gptr() == this->egptr();
-   }
+    bool at_eof()
+    {
+        return gptr() == this->egptr();
+    }
 
-   void buffer_updates_this()
-   {
-       this->setg(buffer.eback(), buffer.gptr(), buffer.egptr());
-   }
+    void buffer_updates_this()
+    {
+        this->setg(buffer.eback(), buffer.gptr(), buffer.egptr());
+    }
 
-   void this_updates_buffer()
-   {
-       buffer.setg(this->eback(), this->gptr(), this->egptr());
-   }
+    void this_updates_buffer()
+    {
+        buffer.setg(this->eback(), this->gptr(), this->egptr());
+    }
 
-   parser_istream & parent;
-   exposed_base_t & buffer;
+    parser_istream & parent;
+    exposed_base_t & buffer;
 };
 } // namespace seqan3
