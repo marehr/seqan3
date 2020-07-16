@@ -12,6 +12,9 @@ template <typename char_t, typename traits_t = std::char_traits<char_t>>
 struct streambuf_subrange
 {
     streambuf_subrange() = default;
+    streambuf_subrange(streambuf_subrange const &) = delete;
+    streambuf_subrange(streambuf_subrange &&) = default;
+
     explicit streambuf_subrange(size_t capacity)
         : streambuf_copy{}
     {
