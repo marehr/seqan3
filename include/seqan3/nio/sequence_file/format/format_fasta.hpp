@@ -94,17 +94,25 @@ struct format_fasta : public sequence_file_input_format<char>
     template <bool seqan2_parsing>
     void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
     {
+        // TODO: if char is read; ignore only newlines
+        auto const ignore_whitespaces = [](char chr)
+        {
+            if constexpr (seqan2_parsing)
+                return is_space(chr) /*|| is_digit(chr)*/;
+            else
+                return is_space(chr) || is_digit(chr);
+        };
+
+        auto const fasta_begin_token = [&](char chr)
+        {
+            return is_id(chr) || ignore_whitespaces(chr);
+        };
+
         while (true)
         {
             // skip space or digit character
             // std::cout << "skip spaces / digits" << std::endl;
-            parser.drop_while([](char chr)
-            {
-                if constexpr (seqan2_parsing)
-                    return is_space(chr) /*|| is_digit(chr)*/;
-                else
-                    return is_space(chr) || is_digit(chr);
-            });
+            parser.drop_while(ignore_whitespaces);
 
             // stop reading the sequence if we found the start character of the next id, i.e. ">"
             if (parser.at_eof() || parser.char_is(is_id))
@@ -112,13 +120,7 @@ struct format_fasta : public sequence_file_input_format<char>
 
             // read (possible empty) sequence (until the first id, space or digit)
             // std::cout << "capture sequence" << std::endl;
-            parser.take_until(sequence, [](char chr)
-            {
-                if constexpr (seqan2_parsing)
-                    return is_id(chr) || is_space(chr) /*|| is_digit(chr)*/;
-                else
-                    return is_id(chr) || is_space(chr) || is_digit(chr);
-            });
+            parser.take_until(sequence, fasta_begin_token);
         }
     }
 };
