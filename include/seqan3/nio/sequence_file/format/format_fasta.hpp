@@ -20,7 +20,7 @@ struct format_fasta : public sequence_file_input_format<char>
         read_id<false>(record.id, parser);
 
         // Sequence
-        read_sequence(record.sequence, parser);
+        read_sequence<true>(record.sequence, parser);
     }
 
     static constexpr auto const is_id = [](char const chr)
@@ -91,6 +91,7 @@ struct format_fasta : public sequence_file_input_format<char>
 
     }
 
+    template <bool seqan2_parsing>
     void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
     {
         while (true)
@@ -99,7 +100,10 @@ struct format_fasta : public sequence_file_input_format<char>
             // std::cout << "skip spaces / digits" << std::endl;
             parser.drop_while([](char chr)
             {
-                return is_space(chr) || is_digit(chr);
+                if constexpr (seqan2_parsing)
+                    return is_space(chr) /*|| is_digit(chr)*/;
+                else
+                    return is_space(chr) || is_digit(chr);
             });
 
             // stop reading the sequence if we found the start character of the next id, i.e. ">"
@@ -110,7 +114,10 @@ struct format_fasta : public sequence_file_input_format<char>
             // std::cout << "capture sequence" << std::endl;
             parser.take_until(sequence, [](char chr)
             {
-                return is_id(chr) || is_space(chr) || is_digit(chr);
+                if constexpr (seqan2_parsing)
+                    return is_id(chr) || is_space(chr) /*|| is_digit(chr)*/;
+                else
+                    return is_id(chr) || is_space(chr) || is_digit(chr);
             });
         }
     }
