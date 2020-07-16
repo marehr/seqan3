@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include <seqan3/std/new>
 #include <seqan3/io/stream/detail/stream_buffer_exposer.hpp>
 #include <seqan3/nio/sequence_file/format/sequence_file_input_format.hpp>
 // #include <seqan3/core/char_operations/predicate.hpp>
@@ -13,7 +14,9 @@ struct format_fasta : public sequence_file_input_format<char>
 {
     using sequence_file_input_format<char>::record_buffer;
 
-    virtual void read_sequence_record(record_buffer & record, parser_istream<char> & parser) override
+    // Note: alignas guarantees that function begins on cache line
+    virtual void read_sequence_record alignas(std::hardware_destructive_interference_size)
+        (record_buffer & record, parser_istream<char> & parser) override
     {
         // std::cout << "read_sequence_record: record" << std::endl;
         // ID
