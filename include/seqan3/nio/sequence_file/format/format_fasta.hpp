@@ -20,7 +20,7 @@ struct format_fasta : public sequence_file_input_format<char>
         read_id<false>(record.id, parser);
 
         // Sequence
-        read_sequence<true>(record.sequence, parser);
+        read_sequence<true, false>(record.sequence, parser);
     }
 
     static constexpr auto const is_blank = [](char const chr)
@@ -101,13 +101,15 @@ struct format_fasta : public sequence_file_input_format<char>
 
     }
 
-    template <bool seqan2_parsing>
+    template <bool seqan2_parsing, bool parse_alphabet>
     void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
     {
         // TODO: if char is read; ignore only newlines
         auto const ignore_whitespaces = [](char chr)
         {
-            if constexpr (seqan2_parsing)
+            if constexpr (!parse_alphabet)
+                return is_newline(chr);
+            else if constexpr (seqan2_parsing)
                 return is_space(chr);
             else
                 return is_space(chr) || is_digit(chr);
