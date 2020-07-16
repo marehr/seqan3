@@ -148,7 +148,7 @@ protected:
 template <typename __TODO__>
 struct sequence_file_input<__TODO__>::record
 {
-    using container_t = std::string;
+    using container_t = std::vector<char>;
 
     container_t & id()
     {
