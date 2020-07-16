@@ -72,23 +72,25 @@ struct parser_istream
     template <typename predicate_t>
     void drop_while(predicate_t && predicate)
     {
-        for (char chr: *this)
-        {
-            if (!predicate(chr))
-                break;
-        }
+        _skip_while<false>(predicate);
     }
 
     template <typename predicate_t>
     void take_until(streambuf_subrange_t & subrange, predicate_t && predicate)
     {
         capture_start(subrange);
+        _skip_while<true>(predicate);
+        capture_end();
+    }
+
+    template <bool predicate_is, typename predicate_t>
+    void _skip_while(predicate_t && predicate)
+    {
         for (char chr: *this)
         {
-            if (predicate(chr))
+            if (predicate(chr) == predicate_is)
                 break;
         }
-        capture_end();
     }
 
     istreambuf buffer;
