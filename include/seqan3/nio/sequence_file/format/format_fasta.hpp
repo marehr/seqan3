@@ -26,6 +26,7 @@ struct format_fasta : public sequence_file_input_format<char>
         read_sequence<true, false>(record.sequence, parser);
     }
 
+private:
     static constexpr auto const is_blank = [](char const chr)
     {
         bool success = chr == '\t' || chr == ' ';
@@ -76,7 +77,7 @@ struct format_fasta : public sequence_file_input_format<char>
     };
 
     template <bool truncate_ids>
-    void read_id(typename record_buffer::id_t & id, parser_istream<char> & parser)
+    static void read_id(typename record_buffer::id_t & id, parser_istream<char> & parser)
     {
         if (!parser.advance_if(fasta_id_start_token))
             throw std::runtime_error{"ERROR: expected id character"};
@@ -105,7 +106,7 @@ struct format_fasta : public sequence_file_input_format<char>
     }
 
     template <bool seqan2_parsing, bool parse_alphabet>
-    void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
+    static void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
     {
         // TODO: if char is read; ignore only newlines
         auto const ignore_whitespaces = [](char chr)
