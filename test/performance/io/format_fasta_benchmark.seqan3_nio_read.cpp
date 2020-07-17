@@ -20,6 +20,7 @@ void seqan3_nio_char_read(benchmark::State & state)
 
         seqan3::nio::sequence_file_input fin{istream};
         seqan3::nio::format_fasta fasta{};
+        // fasta.parse_char_alphabet = true;
         fin.set_format(fasta);
 
         for (auto && record: fin)
