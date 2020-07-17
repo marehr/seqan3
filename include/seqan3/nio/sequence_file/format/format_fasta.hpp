@@ -108,7 +108,11 @@ private:
 
     static constexpr auto const fasta_id_start_token = [](char const chr)
     {
-        bool success = chr == '>' || chr == ';';
+        bool success;
+        if constexpr (sequence_mode == format_fasta_traits::parse_alphabet_non_conforming)
+            success = chr == '>' || chr == ';';
+        else
+            success = chr == '>';
         // std::cout << "fasta_id_start_token(chr): " << chr << " :: " << success << std::endl;
         return success;
     };
