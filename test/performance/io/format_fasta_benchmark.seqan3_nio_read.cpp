@@ -19,7 +19,8 @@ void seqan3_nio_char_read(benchmark::State & state)
         istream.seekg(0, std::ios::beg);
 
         seqan3::nio::sequence_file_input fin{istream};
-        seqan3::nio::format_fasta fasta{};
+        seqan3::nio::basic_format_fasta<seqan3::nio::format_fasta_traits::complete_id,
+                                        seqan3::nio::format_fasta_traits::parse_char_alphabet> fasta{};
         // fasta.parse_char_alphabet = true;
         fin.set_format(fasta);
 

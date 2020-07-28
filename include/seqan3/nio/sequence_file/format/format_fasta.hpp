@@ -124,7 +124,7 @@ private:
         return success;
     };
 
-    static void read_id(typename record_buffer::id_t & id, parser_istream<char> & parser)
+    inline static void read_id(typename record_buffer::id_t & id, parser_istream<char> & parser)
     {
         if (!parser.advance_if(fasta_id_start_token))
             throw std::runtime_error{"ERROR: expected id character"};
@@ -152,7 +152,7 @@ private:
 
     }
 
-    static void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
+    inline static void read_sequence(typename record_buffer::sequence_t & sequence, parser_istream<char> & parser)
     {
         // TODO: if char is read; ignore only newlines
         auto const ignore_whitespaces = [](char chr)
