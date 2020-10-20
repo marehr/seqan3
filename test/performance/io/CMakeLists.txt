@@ -1,3 +1,4 @@
+seqan3_benchmark(awesome_format_fasta_benchmark.cpp)
 seqan3_benchmark(format_fasta_benchmark.cpp)
 seqan3_benchmark(format_fastq_benchmark.cpp)
 seqan3_benchmark(format_sam_benchmark.cpp)
