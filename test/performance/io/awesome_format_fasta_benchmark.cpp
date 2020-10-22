@@ -5,13 +5,20 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <execution>
 
 #include <benchmark/benchmark.h>
 
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/alphabet/nucleotide/dna15.hpp>
 #include <seqan3/io/awesome_file/sequence_file_in.hpp>
 #include <seqan3/io/awesome_file/format_fasta.hpp>
+#include <seqan3/range/views/char_to.hpp>
+#include <seqan3/range/views/convert.hpp>
+#include <seqan3/range/views/to.hpp>
 #include <seqan3/test/performance/units.hpp>
 
 #include <sstream>
@@ -253,10 +260,10 @@ void from_fasta(benchmark::State & state)
         istream.clear();
         istream.seekg(0, std::ios::beg);
 
-        seqan3::detail::fast_istreambuf_iterator<char> it{*istream.rdbuf()};
+        // seqan3::detail::fast_istreambuf_iterator<char> it{*istream.rdbuf()};
 
         for (size_t j = 0; j < iterations_per_run; ++j)
-            fmt.read_record(it);
+            fmt.read_record(istream);
     }
 
     size_t bytes_per_run = fasta_file.size();
@@ -277,10 +284,8 @@ void from_format_base(benchmark::State & state)
         istream.clear();
         istream.seekg(0, std::ios::beg);
 
-        seqan3::detail::fast_istreambuf_iterator<char> it{*istream.rdbuf()};
-
         for (size_t j = 0; j < iterations_per_run; ++j)
-            fmt->read_record(it);
+            fmt->read_record(istream);
     }
 
     size_t bytes_per_run = fasta_file.size();
@@ -290,7 +295,7 @@ void from_format_base(benchmark::State & state)
 }
 BENCHMARK(from_format_base);
 
-void read3(benchmark::State & state)
+void read_awesome(benchmark::State & state)
 {
     std::istringstream istream{fasta_file};
     seqan3::awesome::sequence_file_in fin{istream, seqan3::awesome::format_fasta{}};
@@ -311,6 +316,38 @@ void read3(benchmark::State & state)
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
 }
 
-BENCHMARK(read3);
+BENCHMARK(read_awesome);
+
+void read_awesome_with_conversion(benchmark::State & state)
+{
+    std::istringstream istream{fasta_file};
+    seqan3::awesome::sequence_file_in fin{istream, seqan3::awesome::format_fasta{}};
+
+    std::vector<seqan3::dna5> seq{};
+
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+
+        auto it = fin.begin();
+        for (size_t j = 0; j < iterations_per_run; ++j)
+        {
+            // seq.clear();
+            // size_t s = std::ranges::distance(it->seq());
+            // seq.resize(s);
+            seq = it->seq() | seqan3::views::char_to<seqan3::dna15> | seqan3::views::convert<seqan3::dna5> | seqan3::views::to<std::vector<seqan3::dna5>>;
+            // std::copy_n(std::execution::par, dna5_view.begin(), s, seq.begin());
+            it++;
+        }
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+
+BENCHMARK(read_awesome_with_conversion);
 
 BENCHMARK_MAIN();

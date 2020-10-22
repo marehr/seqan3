@@ -30,16 +30,12 @@ private:
     using base_format_type = format_base<record_base_t>;
     using base_format_ptr_type = std::unique_ptr<base_format_type>;
 
-    using streambuf_iterator_type = seqan3::detail::fast_istreambuf_iterator<char>;
-
     std::vector<base_format_ptr_type> registered_formats{};
     base_format_type * selected_format{};
 
     // We actually want to use a stream here.
     std::ifstream input_fstream{}; // We need to have the file stream and maybe something else.
-    streambuf_iterator_type streambuf_iter{}; // Do we need this?
-
-    bool cache_first_record{true};
+    std::basic_istream<char> * input_stream{nullptr};
 public:
 
     struct iterator;
@@ -89,13 +85,12 @@ public:
         if (!input_fstream.good())
             throw std::runtime_error{"Could not open the file stream."};
 
-        // Set the streambuf_iterator.
-        streambuf_iter = streambuf_iterator_type{*input_fstream.rdbuf()};
+        input_stream = &input_fstream; // Set the input stream to the file stream.
     }
 
     template <typename format_t>
         requires (std::derived_from<typename std::remove_reference_t<format_t>::rebind_record<record_base_t>, base_format_type>)
-    input_file(std::istream & input_stream, format_t && format)
+    input_file(std::istream & outer_input_stream, format_t && format)
     { // Register the format.
         registered_formats.emplace_back(
                 std::make_unique<typename std::remove_reference_t<format_t>::rebind_record<record_base_t>>(
@@ -105,25 +100,16 @@ public:
 
         // Next step: open file_handle from the path.
         // Also add the decompression format.
-        if (!input_stream.good())
+        if (!outer_input_stream.good())
             throw std::runtime_error{"Could not open the file stream."};
 
         // Set the streambuf_iterator.
-        streambuf_iter = streambuf_iterator_type{*input_stream.rdbuf()};
+        input_stream = &outer_input_stream;
     }
 
     iterator begin()
     {
-        iterator it{this};
-        // Who decides which format has a header?
-        // This decides the user implementing the format.
-        if (cache_first_record && it != end())
-        {
-            ++it;
-            cache_first_record = false;
-        }
-
-        return it;
+        return iterator{this};
     }
 
     iterator begin() const = delete;
@@ -143,20 +129,6 @@ public:
         selected_format = std::addressof(*rhs.selected_format);
         swap(registered_formats, rhs.registered_formats);
         swap(input_fstream, rhs.input_fstream);
-        streambuf_iter = streambuf_iterator_type{*input_fstream.rdbuf()};
-        cache_first_record = rhs.cache_first_record;
-    }
-
-private:
-
-    // void read_record()
-    // {
-    //     cached_record = selected_format->read_record(streambuf_iter);
-    // }
-
-    bool eof() const
-    {
-        return streambuf_iter == std::default_sentinel;
     }
 };
 
@@ -166,7 +138,7 @@ class input_file<record_base_t>::iterator
 private:
 
     input_file * host_file{};
-    record_base_t * cached_record{};
+    record_base_t * cached_record{nullptr};
     // The idea is to present the base type here.
     // Could we remedy this by making the base a CRTP?
     bool eof{false};
@@ -175,7 +147,7 @@ public:
 
     using value_type = record_base_t;
     using reference = std::add_lvalue_reference_t<value_type>;
-    using pointer = void;
+    using pointer = record_base_t *;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = std::input_iterator_tag;
@@ -188,7 +160,9 @@ public:
     ~iterator() = default;
 
     iterator(input_file * host_file) : host_file{host_file}
-    {}
+    {
+        ++(*this);
+    }
 
     reference operator*() const
     {
@@ -197,14 +171,16 @@ public:
         return *cached_record;
     }
 
+    pointer operator->() const
+    {
+        // This can't be a header and a record at the same time? Can it?
+        // It could by making it a variant, but do we want to?
+        return cached_record;
+    }
+
     iterator & operator++()
     {
-        // TODO: Reevaluate!
-        if (!host_file->eof())
-            cached_record = &host_file->selected_format->read_record(host_file->streambuf_iter);
-        else
-            eof = true;
-
+        cached_record = host_file->selected_format->read_record(*(host_file->input_stream));
         return *this;
     }
 
@@ -215,7 +191,7 @@ public:
 
     bool operator==(std::default_sentinel_t const &) const noexcept
     {
-        return eof;
+        return cached_record == nullptr;
     }
 
     // friend bool operator==(std::default_sentinel_t const & lhs, iterator const & rhs) noexcept

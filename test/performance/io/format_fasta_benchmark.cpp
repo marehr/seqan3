@@ -5,9 +5,9 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-// #if __has_include(<seqan/seq_io.h>)
-//     #include <seqan/seq_io.h>
-// #endif
+#if __has_include(<seqan/seq_io.h>)
+    #include <seqan/seq_io.h>
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -101,6 +101,8 @@ void read3(benchmark::State & state)
     std::istringstream istream{fasta_file};
     seqan3::sequence_file_input fin{istream, seqan3::format_fasta{}};
 
+    std::vector<seqan3::dna5> seq{};
+
     for (auto _ : state)
     {
         istream.clear();
@@ -108,7 +110,10 @@ void read3(benchmark::State & state)
 
         auto it = fin.begin();
         for (size_t i = 0; i < iterations_per_run; ++i)
+        {
+            seq = seqan3::get<seqan3::field::seq>(*it);
             it++;
+        }
     }
 
     size_t bytes_per_run = fasta_file.size();
@@ -118,37 +123,37 @@ void read3(benchmark::State & state)
 }
 BENCHMARK(read3);
 
-// #if __has_include(<seqan/seq_io.h>)
+#if __has_include(<seqan/seq_io.h>)
 
-// #include <fstream>
+#include <fstream>
 
-// void read2(benchmark::State & state)
-// {
-//     seqan::CharString id;
-//     seqan::Dna5String seq;
+void read2(benchmark::State & state)
+{
+    seqan::CharString id;
+    seqan::Dna5String seq;
 
-//     std::istringstream istream{fasta_file};
+    std::istringstream istream{fasta_file};
 
-//     for (auto _ : state)
-//     {
-//         istream.clear();
-//         istream.seekg(0, std::ios::beg);
-//         auto it = seqan::Iter<std::istringstream, seqan::StreamIterator<seqan::Input> >(istream);
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+        auto it = seqan::Iter<std::istringstream, seqan::StreamIterator<seqan::Input> >(istream);
 
-//         for (size_t i = 0; i < iterations_per_run; ++i)
-//         {
-//             readRecord(id, seq, it, seqan::Fasta{});
-//             clear(id);
-//             clear(seq);
-//         }
-//     }
+        for (size_t i = 0; i < iterations_per_run; ++i)
+        {
+            seqan::readRecord(id, seq, it, seqan::Fasta{});
+            seqan::clear(id);
+            seqan::clear(seq);
+        }
+    }
 
-//     size_t bytes_per_run = fasta_file.size();
-//     state.counters["iterations_per_run"] = iterations_per_run;
-//     state.counters["bytes_per_run"] = bytes_per_run;
-//     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
-// }
-// BENCHMARK(read2);
-// #endif
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+BENCHMARK(read2);
+#endif
 
 BENCHMARK_MAIN();

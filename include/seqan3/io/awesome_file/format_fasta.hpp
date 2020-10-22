@@ -1,102 +1,117 @@
 #pragma once
 
+#include <cstring>
 #include <seqan3/std/concepts>
 #include <seqan3/std/ranges>
+#include <memory_resource>
+#include <vector>
 #include <string>
 
 #include <seqan3/core/char_operations/predicate.hpp>
 #include <seqan3/io/awesome_file/format_base.hpp>
 #include <seqan3/io/awesome_file/sequence_record.hpp>
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/range/views/type_reduce.hpp>
 
 #include <seqan3/core/debug_stream.hpp>
 
 namespace seqan3::awesome
 {
 
-// The original value. -> store pointer to base type.
-// TODO: Refactor into policies for data management.
+// Default definition which is overloaded for the record later.
 template <typename base_record_t>
-    requires std::derived_from<base_record_t, sequence_record>
-class fasta_record final : public base_record_t
+class fasta_record
 {
-private:
+    fasta_record() = delete;
+};
 
-    using typename base_record_t::return_t;
+// Write a parsing policy?
+
+class read_policy
+{
 public:
-
-    using buffer_interval_type = std::pair<size_t, size_t>;
-
-    // // Might have a header pointer.
-    std::vector<char> buffer{};
-    std::vector<buffer_interval_type> buffer_field_positions{3 , {0, 0}};
-
-    // using sequence_record::sequence_record;
-
-    fasta_record() : base_record_t{this}
-    {}
-
-    // TODO: Get rid of this implementation using a) adaptor or b) policy?
-    fasta_record(fasta_record const & other) :
-        base_record_t{this},
-        buffer{other.buffer},
-        buffer_field_positions{other.buffer_field_positions}
-    {}
-
-    fasta_record(fasta_record && other) noexcept : fasta_record{}
-    {
-        swap(other);
-    }
-
-    fasta_record & operator=(fasta_record other) noexcept
-    {
-        swap(other);
-        return *this;
-    }
-    ~fasta_record() = default;
-
-    void clear() override
-    {
-        buffer.clear();
-        std::ranges::fill(buffer_field_positions, buffer_interval_type{0, 0});
-    }
+    read_policy() = default;
+    read_policy(read_policy const &) = default;
+    read_policy(read_policy &&) = default;
+    read_policy & operator=(read_policy const &) = default;
+    read_policy & operator=(read_policy &&) = default;
+    ~read_policy() = default;
 
 protected:
 
-    return_t id_impl() override
+    template <typename buffer_t, typename delimiter_t>
+    bool read_until(buffer_t & buffer,
+                    delimiter_t && delimiter,
+                    seqan3::detail::stream_buffer_exposer<char> & streambuf)
     {
-        int32_t field_pos = static_cast<int32_t>(field::id);
-        return buffer | seqan3::views::slice(buffer_field_positions[field_pos].first,
-                                             buffer_field_positions[field_pos].second);
+        char * current = streambuf.gptr();
+        // This assumes we know that we don't need to call underflow.
+        for (; current != streambuf.egptr() && !delimiter(*current); ++current)
+        {}
+
+        size_t old_buffer_size = buffer.size();
+        size_t count = current - streambuf.gptr();
+        buffer.resize(old_buffer_size + count); // make enough memory space. // Use pmr::vector for this.
+        std::memcpy(buffer.data() + old_buffer_size, streambuf.gptr(), count);
+        streambuf.gbump(count);
+
+        // We actually found the delimiter and do not need to underflow.
+        if (delimiter(*current))
+            return true;
+        else if (seqan3::is_eof(streambuf.underflow()))
+            return false;
+
+        return read_until(buffer, delimiter, streambuf);
     }
+};
 
-    return_t seq_impl() override
+class skip_policy
+{
+public:
+    skip_policy() = default;
+    skip_policy(skip_policy const &) = default;
+    skip_policy(skip_policy &&) = default;
+    skip_policy & operator=(skip_policy const &) = default;
+    skip_policy & operator=(skip_policy &&) = default;
+    ~skip_policy() = default;
+
+protected:
+
+    template <typename delimiter_t>
+    bool skip_until(delimiter_t && delimiter, seqan3::detail::stream_buffer_exposer<char> & streambuf)
     {
-        int32_t field_pos = static_cast<int32_t>(field::seq);
-        return buffer | seqan3::views::slice(buffer_field_positions[field_pos].first,
-                                             buffer_field_positions[field_pos].second);
-    }
+        char * current = streambuf.gptr();
+        // This assumes we know that we don't need to call underflow.
+        for (; current != streambuf.egptr() && !delimiter(*current); ++current)
+        {}
 
-    void swap(fasta_record & rhs) noexcept
-    {
-        using std::swap;
+        streambuf.gbump(current - streambuf.gptr());
 
-        swap(buffer, rhs.buffer);
-        swap(buffer_field_positions, rhs.buffer_field_positions);
+        // We actually found the delimiter and do not need to underflow.
+        if (delimiter(*current))
+            return true;
+        else if (seqan3::is_eof(streambuf.underflow())) // we need to underflow and check if we are at the end.
+            return false;
+
+        return skip_until(delimiter, streambuf); // we skip more.
     }
 };
 
 // TODO: Abstract into policies.
 // TODO: Optimise the parsing.
 template <typename record_base_t = sequence_record>
-    requires std::semiregular<fasta_record<record_base_t>>
-class format_fasta : public format_base<record_base_t>
+//!\cond
+    // requires std::semiregular<fasta_record<record_base_t>>
+//!\endcond
+class format_fasta :
+    public format_base<record_base_t>,
+    private read_policy,
+    private skip_policy
 {
 private:
 
     using base_format_type = format_base<record_base_t>;
     using record_type = fasta_record<record_base_t>;
-    using typename base_format_type::streambuf_iterator;
+    using typename base_format_type::istream_type;
 
     static constexpr auto is_id_delimiter = seqan3::is_char<'>'>;
 
@@ -106,6 +121,8 @@ private:
     template <typename>
     friend class format_fasta;
 
+    using streambuf_iterator = seqan3::detail::fast_istreambuf_iterator<char>;
+    using istreambuf_type = seqan3::detail::stream_buffer_exposer<char>;
 public:
     //!\brief Rebinds this fasta format to a new record base type, i.e. users can extend the seqan3::awesome::sequence_record.
     template <typename new_record_base_t>
@@ -119,6 +136,9 @@ public:
     ~format_fasta() override = default;
 
     template <typename other_sequence_record_t>
+    //!\cond
+        requires (!std::same_as<other_sequence_record_t, record_base_t>)
+    //!\endcond
     explicit format_fasta(format_fasta<other_sequence_record_t> other) :
         valid_extensions{std::move(other.valid_extensions)}
     {
@@ -130,71 +150,95 @@ public:
         return valid_extensions;
     }
 
-    record_type & read_record(streambuf_iterator & it) override
+    record_type * read_record(istream_type & istream) override
     {
-        // for (size_t i = 0; i < 341 && it != std::default_sentinel; ++i)
-        // {
+        assert(istream.rdbuf() != nullptr);
+
+        istreambuf_type & istreambuf = reinterpret_cast<istreambuf_type &>(*istream.rdbuf());
+        streambuf_iterator it{istreambuf};
+        if (it == std::default_sentinel)
+            return nullptr;
+
         record.clear();
-        // Also just parse repeatedly, until delimiter is reached and adding to the buffer
-        // And afterwards set the id.
-        assert(is_id_delimiter(*it));
 
-        size_t buffer_position = 0;
-        ++it;
-        skip_until(it, seqan3::is_graph); // Until the first non space character.
+        assert(is_id_delimiter(*istreambuf.gptr()));
 
-        buffer_position += read_until(it, record, seqan3::is_char<'\n'> || seqan3::is_char<'\r'>);
-        set_buffer_position(record, field::id, {0, buffer_position});
+        istreambuf.gbump(1);
+        if (!skip_until(seqan3::is_graph, istreambuf))
+            throw std::runtime_error{"Unexpected end of input"};
 
-        auto seq_field_delimiter = is_id_delimiter || seqan3::is_eof;
-        size_t seq_buffer_begin = buffer_position;
+        if (!read_until(record.id_buffer, seqan3::is_char<'\n'> || seqan3::is_char<'\r'>, istreambuf))
+            throw std::runtime_error{"Unexpected end of input"};
 
+        constexpr auto seq_field_delimiter = is_id_delimiter || seqan3::is_eof;
         while (it != std::default_sentinel && !seq_field_delimiter(*it))
         {
-            buffer_position += read_until(it, record, seqan3::is_space);
-            skip_until(it, seqan3::is_graph);
+            if (!read_until(record.seq_buffer, seqan3::is_space, istreambuf))
+                throw std::runtime_error{"Unexpected end of input"};
+
+            skip_until(seqan3::is_graph, istreambuf);
         }
-        set_buffer_position(record, field::seq, {seq_buffer_begin, buffer_position});
-        // }
-        return record;
+        return &record;
     }
+};
 
+// ----------------------------------------------------------------------------
+// fasta_rectod implementation.
+// ----------------------------------------------------------------------------
+
+template <typename base_record_t>
+//!\cond
+    requires std::derived_from<base_record_t, sequence_record>
+//!\endcond
+class fasta_record<base_record_t> final :
+    public base_record_t,
+    private record_registration_policy<fasta_record<base_record_t>>
+{
 private:
-    template <typename delimiter_t>
-    size_t read_until(streambuf_iterator & it, record_type & record, delimiter_t && delimiter)
+    friend record_registration_policy<fasta_record<base_record_t>>;
+
+    template <typename>
+    friend class format_fasta;
+
+    using typename base_record_t::return_t;
+
+    // std::array<char, 2000> buffer{}; // a small buffer on the stack
+    // std::shared_ptr<std::pmr::monotonic_buffer_resource> pool_ptr = std::make_shared<std::pmr::monotonic_buffer_resource>(buffer.data(), buffer.size());
+
+    std::vector<char> id_buffer{};
+    // std::pmr::vector<char> seq_buffer{pool_ptr.get()};
+    std::vector<char> seq_buffer{};
+public:
+
+    using buffer_interval_type = std::pair<size_t, size_t>;
+
+    fasta_record() = default;
+    fasta_record(fasta_record const &) = default;
+    fasta_record(fasta_record &&) = default;
+    fasta_record & operator=(fasta_record const &) = default;
+    fasta_record & operator=(fasta_record &&) = default;
+    ~fasta_record() = default;
+
+    void clear() override
     {
-        // Now we want to actually parse the record.
-        // We actually run over the stream and delimit the field.
-        // We might be able to also provide some skip characters? Or we can do this later.
-        // When we actually apply the conversion.
-
-        size_t current_data_size = record.buffer.size();
-
-        // We risk elementwise copy here, but want probably some optimisations, like memcpy.
-        // So we could scan until the delimter and read in the chunk.
-        // std::ranges::copy_if(it, streambuf_iterator{}, std::cpp20::back_inserter(record.buffer), !delimiter);
-        for (; it != std::default_sentinel && !delimiter(*it); ++it)
-            record.buffer.push_back(*it);
-
-        return record.buffer.size() - current_data_size;
+        id_buffer.clear();
+        seq_buffer.clear();
     }
 
-    template <typename delimiter_t>
-    void skip_until(streambuf_iterator & streambuf_it, delimiter_t && delimiter)
+protected:
+
+    return_t id_impl() override
     {
-        for (; streambuf_it != std::default_sentinel && !delimiter(*streambuf_it); ++streambuf_it)
-        {}
+        return id_buffer | seqan3::views::type_reduce;
     }
 
-    void set_buffer_position(record_type & record,
-                             field const field_id,
-                             std::pair<size_t, size_t> buffer_pos)
+    return_t seq_impl() override
     {
-        record.buffer_field_positions[static_cast<int32_t>(field_id)] = std::move(buffer_pos);
+        return seq_buffer | seqan3::views::type_reduce;
     }
 };
 
 // Default deduction guide.
-format_fasta() -> format_fasta<>;
+format_fasta() -> format_fasta<sequence_record>;
 
 } // namespace seqan3::awesome
