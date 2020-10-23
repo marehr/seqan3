@@ -3,7 +3,7 @@
 #include <seqan3/std/ranges>
 
 #include <seqan3/io/awesome_file/file_base.hpp>
-#include <seqan3/io/awesome_file/get_decorated_record.hpp>
+#include <seqan3/io/awesome_file/record_get_adaptor.hpp>
 
 namespace seqan3::awesome
 {
@@ -14,7 +14,7 @@ class decorated_file
 private:
 
     using record_type = std::ranges::range_value_t<file_t>;
-    using decorated_record_type = get_decorated_record<record_type, field_ids...>;
+    using decorated_record_type = record_get_adaptor<record_type, field_ids...>;
 
     static constexpr auto decorate_record = [] (record_type & rec) -> decltype(decorated_record_type{rec})
     {

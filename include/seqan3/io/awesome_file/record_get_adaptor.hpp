@@ -9,18 +9,12 @@
 namespace seqan3::awesome
 {
 
-// template <auto ...field_ids>
-//     requires (std::is_enum_v<decltype(field_ids)> && ...)
-// struct fields{};
-
 template <typename record_base_t, auto ...field_ids>
-class get_decorated_record : public record_base_t
+class record_get_adaptor
 {
 private:
 
     static constexpr size_t field_id_count = sizeof...(field_ids);
-
-    // using field_ids_as_type_list = seqan3::type_list<std::integral_constant<decltype(field_ids), field_ids>...>;
 
     template <size_t index>
     static constexpr auto field_id_at =
@@ -40,17 +34,15 @@ private:
 
 public:
 
-    get_decorated_record() = default;
-    get_decorated_record(get_decorated_record const &) = default;
-    get_decorated_record(get_decorated_record &&) = default;
-    get_decorated_record & operator=(get_decorated_record const &) = default;
-    get_decorated_record & operator=(get_decorated_record &&) = default;
-    ~get_decorated_record() = default;
+    record_get_adaptor() = default;
+    record_get_adaptor(record_get_adaptor const &) = default;
+    record_get_adaptor(record_get_adaptor &&) = default;
+    record_get_adaptor & operator=(record_get_adaptor const &) = default;
+    record_get_adaptor & operator=(record_get_adaptor &&) = default;
+    ~record_get_adaptor() = default;
 
-    get_decorated_record(record_base_t const & base) : base_record{std::addressof(base)}
+    record_get_adaptor(record_base_t const & base) : base_record{std::addressof(base)}
     {}
-
-    using record_base_t::record_base_t;
 
     template <size_t index>
         requires (index < field_id_count)
@@ -78,14 +70,14 @@ namespace std
 {
 
 template <typename record_base_t, auto ...field_ids>
-struct tuple_size<seqan3::awesome::get_decorated_record<record_base_t, field_ids...>> :
+struct tuple_size<seqan3::awesome::record_get_adaptor<record_base_t, field_ids...>> :
     public std::integral_constant<size_t, sizeof...(field_ids)>
 {};
 
 template <size_t index, typename record_base_t, auto ...field_ids>
-struct tuple_element<index, seqan3::awesome::get_decorated_record<record_base_t, field_ids...>>
+struct tuple_element<index, seqan3::awesome::record_get_adaptor<record_base_t, field_ids...>>
 {
-    using decorator_t = seqan3::awesome::get_decorated_record<record_base_t, field_ids...>;
+    using decorator_t = seqan3::awesome::record_get_adaptor<record_base_t, field_ids...>;
 
     using type = std::remove_reference_t<decltype(std::declval<decorator_t>().template get<index>())>;
 };

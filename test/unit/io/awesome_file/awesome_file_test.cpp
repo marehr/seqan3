@@ -5,7 +5,7 @@
 #include <seqan3/io/awesome_file/file_base.hpp>
 #include <seqan3/io/awesome_file/sequence_file_in.hpp>
 #include <seqan3/io/awesome_file/format_fasta.hpp>
-#include <seqan3/io/awesome_file/get_decorated_record.hpp>
+#include <seqan3/io/awesome_file/record_get_adaptor.hpp>
 #include <seqan3/io/awesome_file/decorated_file.hpp>
 
 #include <seqan3/core/debug_stream.hpp>
@@ -343,7 +343,7 @@ TEST(awesome_file_test, get_decorator)
 
     seqan3::awesome::sequence_file_in in_file{p, seqan3::awesome::format_fasta{}};
     using v_t = std::ranges::range_value_t<decltype(in_file)>;
-    using decorated_record_t = seqan3::awesome::get_decorated_record<v_t, seqan3::awesome::field::seq, seqan3::awesome::field::id>;
+    using decorated_record_t = seqan3::awesome::record_get_adaptor<v_t, seqan3::awesome::field::seq, seqan3::awesome::field::id>;
     // We want to add
     for (decorated_record_t && record : in_file)
     {
