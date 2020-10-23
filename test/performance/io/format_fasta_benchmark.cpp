@@ -101,7 +101,7 @@ void read3(benchmark::State & state)
     std::istringstream istream{fasta_file};
     seqan3::sequence_file_input fin{istream, seqan3::format_fasta{}};
 
-    std::vector<seqan3::dna5> seq{};
+    size_t count = 0;
 
     for (auto _ : state)
     {
@@ -111,7 +111,8 @@ void read3(benchmark::State & state)
         auto it = fin.begin();
         for (size_t i = 0; i < iterations_per_run; ++i)
         {
-            seq = seqan3::get<seqan3::field::seq>(*it);
+            count = std::ranges::count(seqan3::get<seqan3::field::seq>(*it),
+                                       seqan3::assign_rank_to(0, seqan3::dna5{}));
             it++;
         }
     }
@@ -120,6 +121,7 @@ void read3(benchmark::State & state)
     state.counters["iterations_per_run"] = iterations_per_run;
     state.counters["bytes_per_run"] = bytes_per_run;
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+    state.counters["count"] = count;
 }
 BENCHMARK(read3);
 
@@ -132,6 +134,7 @@ void read2(benchmark::State & state)
     seqan::CharString id;
     seqan::Dna5String seq;
 
+    size_t count = 0;
     std::istringstream istream{fasta_file};
 
     for (auto _ : state)
@@ -143,6 +146,7 @@ void read2(benchmark::State & state)
         for (size_t i = 0; i < iterations_per_run; ++i)
         {
             seqan::readRecord(id, seq, it, seqan::Fasta{});
+            count = std::ranges::count(seq, seqan::Dna5{'A'});
             seqan::clear(id);
             seqan::clear(seq);
         }
@@ -152,6 +156,7 @@ void read2(benchmark::State & state)
     state.counters["iterations_per_run"] = iterations_per_run;
     state.counters["bytes_per_run"] = bytes_per_run;
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+    state.counters["count"] = count;
 }
 BENCHMARK(read2);
 #endif

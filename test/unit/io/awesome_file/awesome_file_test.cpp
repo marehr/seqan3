@@ -5,12 +5,8 @@
 #include <seqan3/io/awesome_file/file_base.hpp>
 #include <seqan3/io/awesome_file/sequence_file_in.hpp>
 #include <seqan3/io/awesome_file/format_fasta.hpp>
-// #include <seqan3/io/awesome_file/get_decorated_record.hpp>
-// #include <seqan3/io/awesome_file/decorated_file.hpp>
-
-// #include <seqan3/alphabet/nucleotide/dna4.hpp>
-// #include <seqan3/range/views/char_to.hpp>
-// #include <seqan3/range/views/to.hpp>
+#include <seqan3/io/awesome_file/get_decorated_record.hpp>
+#include <seqan3/io/awesome_file/decorated_file.hpp>
 
 #include <seqan3/core/debug_stream.hpp>
 
@@ -27,13 +23,9 @@ class my_record_sequence : public seqan3::awesome::record_sequence
 {
 private:
     my_record_sequence * derived{};
-public:
 
-    using valid_fields_type = seqan3::awesome::field_id_type_list<seqan3::awesome::field::id,
-                                                                  seqan3::awesome::field::seq,
-                                                                  seqan3::awesome::field::qual,
-                                                                  my_field::ext_id>;
     using base_t = seqan3::awesome::record_sequence;
+public:
     using typename base_t::return_t;
 
     my_record_sequence() = default;
@@ -49,6 +41,13 @@ public:
         return derived->ext_id_impl();
     }
 
+    using field_to_function_map =
+        seqan3::list_traits::concat<typename base_t::field_to_function_map,
+                                    seqan3::type_list<seqan3::awesome::field_to_function<my_field::ext_id,
+                                                                                         &my_record_sequence::ext_id>
+                                    >
+        >;
+
 protected:
     virtual return_t ext_id_impl()
     {
@@ -63,10 +62,42 @@ protected:
     }
 };
 
+template <typename derived_t, typename my_base_record_t>
+    requires std::derived_from<my_base_record_t, my_record_sequence>
+class my_record_sequence_wrapper : public my_base_record_t
+{
+private:
+    friend derived_t;
+
+    using typename my_base_record_t::return_t;
+
+    // TODO: Inherit these interfaces!
+    return_t id_impl() override
+    {
+        return static_cast<derived_t *>(this)->id();
+    }
+
+    return_t seq_impl() override
+    {
+        return static_cast<derived_t *>(this)->seq();
+    }
+
+    return_t qual_impl() override
+    {
+        return static_cast<derived_t *>(this)->qual();
+    }
+
+    return_t ext_id_impl() override
+    {
+        return static_cast<derived_t *>(this)->ext_id();
+    }
+};
+
 template <typename base_record_t>
     requires std::derived_from<base_record_t, my_record_sequence>
 class ext_fasta_record final :
     public base_record_t,
+    // public my_record_sequence_wrapper<ext_fasta_record<base_record_t>, base_record_t>,
     private seqan3::awesome::record_registration_policy<ext_fasta_record<base_record_t>>
 {
 private:
@@ -96,7 +127,6 @@ public:
         std::ranges::fill(buffer_field_positions, buffer_interval_type{0, 0});
     }
 
-protected:
     return_t id_impl() override
     {
         int32_t field_pos = static_cast<int32_t>(seqan3::awesome::field::id);
@@ -273,14 +303,14 @@ ext_format_fasta() -> ext_format_fasta<>;
 
 TEST(awesome_file_test, rebind)
 {
-    std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fastx"};
+    std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fa"};
 
     using file_t = seqan3::awesome::input_file<my_test::my_record_sequence>;
     file_t in_file{p, seqan3::awesome::format_fasta{}, my_test::ext_format_fasta{}};
 
     for (auto && record : in_file)
     {
-        seqan3::debug_stream << "Ext ID:  " << record.ext_id() << "\n";
+        // seqan3::debug_stream << "Ext ID:  " << record.ext_id() << "\n";
         seqan3::debug_stream << "ID:  " << record.id() << "\n";
         seqan3::debug_stream << "Seq: " << record.seq() << "\n";  // Pure byte string.
     }
@@ -303,46 +333,38 @@ TEST(awesome_file_test, interpret)
             seqan3::debug_stream << "Seq: " << record.seq() << "\n";  // Pure byte string.
         }
     }
-
-    // {
-    //     seqan3::awesome::input_file<seqan3::awesome::sequence_format_base> in_file{p,
-    //         seqan3::awesome::format_fasta{}, seqan3::awesome::format_fasta1{}, seqan3::awesome::format_fasta2{}, seqan3::awesome::format_fasta3{}};
-    //     using v_t = std::ranges::range_value_t<decltype(in_file)>;
-    //     // We want to add
-    //     for (seqan3::awesome::get_decorated_record<v_t, seqan3::awesome::field::seq, seqan3::awesome::field::id> && record : in_file)
-    //     {
-    //         auto && [seq, id] = record;
-    //         seqan3::debug_stream << "ID:" << id << "\n";
-    //         seqan3::debug_stream << "Seq:" << seq << "\n";  // Pure byte string.
-    //     }
-    // }
-
     // What if I want transformation?
     // record.template seq<std::vector<seqan3::dna4>>();
-
 }
 
-// TEST(awesome_file_test, decorated_file)
-// {
+TEST(awesome_file_test, get_decorator)
+{
+    std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fa"};
 
-//     std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fa"};
+    seqan3::awesome::sequence_file_in in_file{p, seqan3::awesome::format_fasta{}};
+    using v_t = std::ranges::range_value_t<decltype(in_file)>;
+    using decorated_record_t = seqan3::awesome::get_decorated_record<v_t, seqan3::awesome::field::seq, seqan3::awesome::field::id>;
+    // We want to add
+    for (decorated_record_t && record : in_file)
+    {
+        auto && [seq, id] = record;
+        seqan3::debug_stream << "ID:" << id << "\n";
+        seqan3::debug_stream << "Seq:" << seq << "\n";
+    }
+}
 
-//     {
-//         using original_file_t = seqan3::awesome::input_file<seqan3::awesome::sequence_format_base>;
-//         using file_t = seqan3::awesome::decorated_file<original_file_t,
-//                                                        seqan3::awesome::field::seq, seqan3::awesome::field::id>;
-//         file_t in_file{original_file_t{p, seqan3::awesome::format_fasta{}}};
+TEST(awesome_file_test, decorated_file)
+{
 
-//         std::vector<seqan3::dna4_vector> sequences{};
+    std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fa"};
 
-//         for (auto && [seq, id] : in_file)
-//         {
-//             seqan3::debug_stream << "ID:  " << id << "\n";
-//             seqan3::debug_stream << "Seq: " << seq << "\n";  // Pure byte string.
-//             sequences.push_back(seq | seqan3::views::char_to<seqan3::dna4> | seqan3::views::to<std::vector>);
-//         }
-//     }
+    using file_t = seqan3::awesome::decorated_file<seqan3::awesome::sequence_file_in,
+                                                   seqan3::awesome::field::seq>;
+    file_t in_file{seqan3::awesome::sequence_file_in{p, seqan3::awesome::format_fasta{}}};
 
-//     // seqan3::awesome::input_file<seqan3::awesome::sequence_format_base> in_file{p, seqan3::awesome::format_fasta{}};
-//     // auto v = in_file | ranges::views::transform([](auto & rec) { return rec.id(); });
-// }
+    for (auto && [seq] : in_file)
+    {
+        // seqan3::debug_stream << "ID:  " << id << "\n";
+        seqan3::debug_stream << "Seq: " << seq << "\n";  // Pure byte string.
+    }
+}

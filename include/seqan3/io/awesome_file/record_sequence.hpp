@@ -66,6 +66,10 @@ public:
         return derived->qual_impl();
     }
 
+    using field_to_function_map = seqan3::type_list<field_to_function<field::id, &record_sequence::id>,
+                                                    field_to_function<field::seq, &record_sequence::seq>,
+                                                    field_to_function<field::qual, &record_sequence::qual>>;
+
 protected:
     virtual return_t id_impl()
     {
@@ -103,6 +107,43 @@ private:
     {
         if (this == derived)
             throw std::runtime_error{"The record implementation was not set. Did you forget to call register_record?"};
+    }
+};
+
+template <typename derived_t, typename record_base_t>
+    requires std::derived_from<record_base_t, record_sequence>
+class record_sequence_wrapper : public record_base_t
+{
+private:
+    friend derived_t;
+
+    using typename record_base_t::return_t;
+
+    record_sequence_wrapper() = default;
+    record_sequence_wrapper(record_sequence_wrapper const &) = default;
+    record_sequence_wrapper(record_sequence_wrapper &&) = default;
+    record_sequence_wrapper & operator=(record_sequence_wrapper const &) = default;
+    record_sequence_wrapper & operator=(record_sequence_wrapper &&) = default;
+    ~record_sequence_wrapper() = default;
+
+    return_t id_impl() override
+    {
+        return as_derived()->id();
+    }
+
+    return_t seq_impl() override
+    {
+        return as_derived()->seq();
+    }
+
+    return_t qual_impl() override
+    {
+        return as_derived()->qual();
+    }
+
+    derived_t * as_derived()
+    {
+        return static_cast<derived_t *>(this);
     }
 };
 

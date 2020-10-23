@@ -6,6 +6,14 @@
 
 namespace seqan3::awesome
 {
+
+template <auto key, auto value>
+struct field_to_function
+{
+    static constexpr auto field = key;
+    static constexpr auto function = value;
+};
+
 // Transforms a list of field ids into a type list of integral constants storing the field ids.
 template <auto ...field_ids>
 using field_id_type_list = seqan3::type_list<std::integral_constant<decltype(field_ids), field_ids>...>;

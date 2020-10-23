@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstring>
 #include <seqan3/std/concepts>
 #include <seqan3/std/ranges>
 #include <memory_resource>
@@ -121,7 +120,7 @@ template <typename base_record_t>
     requires std::derived_from<base_record_t, record_sequence>
 //!\endcond
 class fasta_record<base_record_t> final :
-    public base_record_t,
+    public record_sequence_wrapper<fasta_record<base_record_t>, base_record_t>,
     private record_registration_policy<fasta_record<base_record_t>>
 {
 private:
@@ -155,14 +154,12 @@ public:
         seq_buffer.clear();
     }
 
-protected:
-
-    return_t id_impl() override
+    return_t id()
     {
         return id_buffer | seqan3::views::type_reduce;
     }
 
-    return_t seq_impl() override
+    return_t seq()
     {
         return seq_buffer | seqan3::views::type_reduce;
     }

@@ -5,9 +5,6 @@
 #include <seqan3/io/awesome_file/file_base.hpp>
 #include <seqan3/io/awesome_file/get_decorated_record.hpp>
 
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/cache1.hpp>
-
 namespace seqan3::awesome
 {
 
@@ -19,12 +16,12 @@ private:
     using record_type = std::ranges::range_value_t<file_t>;
     using decorated_record_type = get_decorated_record<record_type, field_ids...>;
 
-    static constexpr auto decorate_record = [] (record_type & rec) -> decltype(decorated_record_type{std::move(rec)})
+    static constexpr auto decorate_record = [] (record_type & rec) -> decltype(decorated_record_type{rec})
     {
-        return decorated_record_type{std::move(rec)};
+        return decorated_record_type{rec};
     };
 
-    static constexpr auto file_adaptor = ranges::views::transform(decorate_record) | ranges::views::cache1;
+    static constexpr auto file_adaptor = std::views::transform(decorate_record);
 
     using decorated_file_type = decltype(std::declval<file_t &>() | file_adaptor);
 
@@ -42,7 +39,7 @@ public:
 
     explicit decorated_file(file_t && original_file) : original_file{std::move(original_file)}
     {
-        file = original_file | file_adaptor;
+        file = this->original_file | file_adaptor;
     }
 
     auto begin()

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstring>
+
+#include <seqan3/core/char_operations/predicate.hpp>
 #include <seqan3/io/stream/iterator.hpp>
 
 namespace seqan3::awesome

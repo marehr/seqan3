@@ -14,6 +14,7 @@
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/nucleotide/dna15.hpp>
+#include <seqan3/io/awesome_file/decorated_file.hpp>
 #include <seqan3/io/awesome_file/sequence_file_in.hpp>
 #include <seqan3/io/awesome_file/format_fasta.hpp>
 #include <seqan3/range/views/char_to.hpp>
@@ -276,7 +277,7 @@ BENCHMARK(from_fasta);
 void from_format_base(benchmark::State & state)
 {
     std::istringstream istream{fasta_file};
-    using fmt_base_t = seqan3::awesome::format_base<seqan3::awesome::sequence_record>;
+    using fmt_base_t = seqan3::awesome::format_base<seqan3::awesome::record_sequence>;
     std::unique_ptr<fmt_base_t> fmt{std::make_unique<seqan3::awesome::format_fasta<>>()};
 
     for (auto _ : state)
@@ -318,13 +319,41 @@ void read_awesome(benchmark::State & state)
 
 BENCHMARK(read_awesome);
 
+void read_awesome_decorated(benchmark::State & state)
+{
+    std::istringstream istream{fasta_file};
+
+    using file_t = seqan3::awesome::decorated_file<seqan3::awesome::sequence_file_in,
+                                                   seqan3::awesome::field::seq>;
+    file_t fin{seqan3::awesome::sequence_file_in{istream, seqan3::awesome::format_fasta{}}};
+
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+
+        auto it = fin.begin();
+        for (size_t j = 0; j < iterations_per_run; ++j)
+        {
+            auto && [seq] = *it;
+            std::ranges::distance(seq | seqan3::views::char_to<seqan3::dna15> | seqan3::views::convert<seqan3::dna5>);
+            it++;
+        }
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+
+BENCHMARK(read_awesome_decorated);
+
 void read_awesome_with_conversion(benchmark::State & state)
 {
     std::istringstream istream{fasta_file};
     seqan3::awesome::sequence_file_in fin{istream, seqan3::awesome::format_fasta{}};
-
-    std::vector<seqan3::dna5> seq{};
-
+    size_t count = 0;
     for (auto _ : state)
     {
         istream.clear();
@@ -336,7 +365,8 @@ void read_awesome_with_conversion(benchmark::State & state)
             // seq.clear();
             // size_t s = std::ranges::distance(it->seq());
             // seq.resize(s);
-            seq = it->seq() | seqan3::views::char_to<seqan3::dna15> | seqan3::views::convert<seqan3::dna5> | seqan3::views::to<std::vector<seqan3::dna5>>;
+            count = std::ranges::count(it->seq() | seqan3::views::char_to<seqan3::dna5>/* | seqan3::views::convert<seqan3::dna5>*/,
+                                       seqan3::assign_rank_to(0, seqan3::dna5{}));
             // std::copy_n(std::execution::par, dna5_view.begin(), s, seq.begin());
             it++;
         }
@@ -346,6 +376,7 @@ void read_awesome_with_conversion(benchmark::State & state)
     state.counters["iterations_per_run"] = iterations_per_run;
     state.counters["bytes_per_run"] = bytes_per_run;
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+    state.counters["count"] = count;
 }
 
 BENCHMARK(read_awesome_with_conversion);

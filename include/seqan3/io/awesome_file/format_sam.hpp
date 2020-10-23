@@ -332,6 +332,8 @@ public:
 // record_sam implementation.
 // ----------------------------------------------------------------------------
 
+// We can solve the problem of multiple inheritance
+
 template <typename base_record_t>
 //!\cond
     requires std::derived_from<base_record_t, record_alignment>
