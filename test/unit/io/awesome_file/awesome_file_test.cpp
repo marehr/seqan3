@@ -23,25 +23,25 @@ enum struct my_field
     // add more
 };
 
-class my_sequence_record : public seqan3::awesome::sequence_record
+class my_record_sequence : public seqan3::awesome::record_sequence
 {
 private:
-    my_sequence_record * derived{};
+    my_record_sequence * derived{};
 public:
 
     using valid_fields_type = seqan3::awesome::field_id_type_list<seqan3::awesome::field::id,
                                                                   seqan3::awesome::field::seq,
                                                                   seqan3::awesome::field::qual,
                                                                   my_field::ext_id>;
-    using base_t = seqan3::awesome::sequence_record;
+    using base_t = seqan3::awesome::record_sequence;
     using typename base_t::return_t;
 
-    my_sequence_record() = default;
-    my_sequence_record(my_sequence_record const &) = default;
-    my_sequence_record(my_sequence_record &&) = default;
-    my_sequence_record & operator=(my_sequence_record const &) = default;
-    my_sequence_record & operator=(my_sequence_record &&) = default;
-    virtual ~my_sequence_record() = default;
+    my_record_sequence() = default;
+    my_record_sequence(my_record_sequence const &) = default;
+    my_record_sequence(my_record_sequence &&) = default;
+    my_record_sequence & operator=(my_record_sequence const &) = default;
+    my_record_sequence & operator=(my_record_sequence &&) = default;
+    virtual ~my_record_sequence() = default;
 
     return_t ext_id() const
     {
@@ -56,7 +56,7 @@ protected:
         return return_t{};
     }
 
-    void register_record(my_sequence_record * derived) noexcept
+    void register_record(my_record_sequence * derived) noexcept
     {
         this->derived = derived;
         base_t::register_record(derived);
@@ -64,7 +64,7 @@ protected:
 };
 
 template <typename base_record_t>
-    requires std::derived_from<base_record_t, my_sequence_record>
+    requires std::derived_from<base_record_t, my_record_sequence>
 class ext_fasta_record final :
     public base_record_t,
     private seqan3::awesome::record_registration_policy<ext_fasta_record<base_record_t>>
@@ -117,7 +117,7 @@ protected:
     }
 };
 
-template <typename record_base_t = my_sequence_record>
+template <typename record_base_t = my_record_sequence>
     requires std::semiregular<ext_fasta_record<record_base_t>>
 class ext_format_fasta final : public seqan3::awesome::format_base<record_base_t>
 {
@@ -137,7 +137,7 @@ private:
     friend class ext_format_fasta;
 
 public:
-    //!\brief Rebinds this fasta format to a new record base type, i.e. users can extend the seqan3::awesome::sequence_record.
+    //!\brief Rebinds this fasta format to a new record base type, i.e. users can extend the seqan3::awesome::record_sequence.
     template <typename new_record_base_t>
     using rebind_record = ext_format_fasta<new_record_base_t>;
 
@@ -148,8 +148,8 @@ public:
     ext_format_fasta & operator=(ext_format_fasta &&) = default;
     ~ext_format_fasta() override = default;
 
-    template <typename other_sequence_record_t>
-    explicit ext_format_fasta(ext_format_fasta<other_sequence_record_t> other) :
+    template <typename other_record_sequence_t>
+    explicit ext_format_fasta(ext_format_fasta<other_record_sequence_t> other) :
         valid_extensions{std::move(other.valid_extensions)}
     {
         seqan3::debug_stream << "ex_format_fasta: Calling converting constructor!\n";
@@ -249,7 +249,7 @@ ext_format_fasta() -> ext_format_fasta<>;
 //     fasta_fmt.extensions().push_back("foo");
 //     ext_fasta_t ext_fasta_fmt{};
 
-//     using base_record_t = my_test::my_sequence_record;
+//     using base_record_t = my_test::my_record_sequence;
 //     using base_format_t = seqan3::awesome::format_base<base_record_t>;
 //     using unique_ptr_t = std::unique_ptr<base_format_t>;
 //     std::vector<unique_ptr_t> formats{};
@@ -275,7 +275,7 @@ TEST(awesome_file_test, rebind)
 {
     std::filesystem::path p{"/Users/rmaerker/Development/seqan3/seqan3-build/test.fastx"};
 
-    using file_t = seqan3::awesome::input_file<my_test::my_sequence_record>;
+    using file_t = seqan3::awesome::input_file<my_test::my_record_sequence>;
     file_t in_file{p, seqan3::awesome::format_fasta{}, my_test::ext_format_fasta{}};
 
     for (auto && record : in_file)

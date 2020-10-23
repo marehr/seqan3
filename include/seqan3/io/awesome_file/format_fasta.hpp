@@ -9,7 +9,7 @@
 
 #include <seqan3/core/char_operations/predicate.hpp>
 #include <seqan3/io/awesome_file/format_base.hpp>
-#include <seqan3/io/awesome_file/sequence_record.hpp>
+#include <seqan3/io/awesome_file/record_sequence.hpp>
 #include <seqan3/range/views/type_reduce.hpp>
 
 #include <seqan3/core/debug_stream.hpp>
@@ -26,79 +26,9 @@ class fasta_record
 
 // Write a parsing policy?
 
-class read_policy
-{
-public:
-    read_policy() = default;
-    read_policy(read_policy const &) = default;
-    read_policy(read_policy &&) = default;
-    read_policy & operator=(read_policy const &) = default;
-    read_policy & operator=(read_policy &&) = default;
-    ~read_policy() = default;
-
-protected:
-
-    template <typename buffer_t, typename delimiter_t>
-    bool read_until(buffer_t & buffer,
-                    delimiter_t && delimiter,
-                    seqan3::detail::stream_buffer_exposer<char> & streambuf)
-    {
-        char * current = streambuf.gptr();
-        // This assumes we know that we don't need to call underflow.
-        for (; current != streambuf.egptr() && !delimiter(*current); ++current)
-        {}
-
-        size_t old_buffer_size = buffer.size();
-        size_t count = current - streambuf.gptr();
-        buffer.resize(old_buffer_size + count); // make enough memory space. // Use pmr::vector for this.
-        std::memcpy(buffer.data() + old_buffer_size, streambuf.gptr(), count);
-        streambuf.gbump(count);
-
-        // We actually found the delimiter and do not need to underflow.
-        if (delimiter(*current))
-            return true;
-        else if (seqan3::is_eof(streambuf.underflow()))
-            return false;
-
-        return read_until(buffer, delimiter, streambuf);
-    }
-};
-
-class skip_policy
-{
-public:
-    skip_policy() = default;
-    skip_policy(skip_policy const &) = default;
-    skip_policy(skip_policy &&) = default;
-    skip_policy & operator=(skip_policy const &) = default;
-    skip_policy & operator=(skip_policy &&) = default;
-    ~skip_policy() = default;
-
-protected:
-
-    template <typename delimiter_t>
-    bool skip_until(delimiter_t && delimiter, seqan3::detail::stream_buffer_exposer<char> & streambuf)
-    {
-        char * current = streambuf.gptr();
-        // This assumes we know that we don't need to call underflow.
-        for (; current != streambuf.egptr() && !delimiter(*current); ++current)
-        {}
-
-        streambuf.gbump(current - streambuf.gptr());
-
-        // We actually found the delimiter and do not need to underflow.
-        if (delimiter(*current))
-            return true;
-        else if (seqan3::is_eof(streambuf.underflow())) // we need to underflow and check if we are at the end.
-            return false;
-
-        return skip_until(delimiter, streambuf); // we skip more.
-    }
-};
-
 // TODO: Abstract into policies.
 // TODO: Optimise the parsing.
-template <typename record_base_t = sequence_record>
+template <typename record_base_t = record_sequence>
 //!\cond
     // requires std::semiregular<fasta_record<record_base_t>>
 //!\endcond
@@ -124,7 +54,7 @@ private:
     using streambuf_iterator = seqan3::detail::fast_istreambuf_iterator<char>;
     using istreambuf_type = seqan3::detail::stream_buffer_exposer<char>;
 public:
-    //!\brief Rebinds this fasta format to a new record base type, i.e. users can extend the seqan3::awesome::sequence_record.
+    //!\brief Rebinds this fasta format to a new record base type, i.e. users can extend the seqan3::awesome::record_sequence.
     template <typename new_record_base_t>
     using rebind_record = format_fasta<new_record_base_t>;
 
@@ -135,11 +65,11 @@ public:
     format_fasta & operator=(format_fasta &&) = default;
     ~format_fasta() override = default;
 
-    template <typename other_sequence_record_t>
+    template <typename other_record_sequence_t>
     //!\cond
-        requires (!std::same_as<other_sequence_record_t, record_base_t>)
+        requires (!std::same_as<other_record_sequence_t, record_base_t>)
     //!\endcond
-    explicit format_fasta(format_fasta<other_sequence_record_t> other) :
+    explicit format_fasta(format_fasta<other_record_sequence_t> other) :
         valid_extensions{std::move(other.valid_extensions)}
     {
         debug_stream << "format_fast: Calling converting constructor!\n";
@@ -188,7 +118,7 @@ public:
 
 template <typename base_record_t>
 //!\cond
-    requires std::derived_from<base_record_t, sequence_record>
+    requires std::derived_from<base_record_t, record_sequence>
 //!\endcond
 class fasta_record<base_record_t> final :
     public base_record_t,
@@ -239,6 +169,6 @@ protected:
 };
 
 // Default deduction guide.
-format_fasta() -> format_fasta<sequence_record>;
+format_fasta() -> format_fasta<record_sequence>;
 
 } // namespace seqan3::awesome

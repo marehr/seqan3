@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <seqan3/core/type_list/type_list.hpp>
+#include <seqan3/io/awesome_file/record_base.hpp>
 #include <seqan3/io/stream/iterator.hpp>
 #include <seqan3/range/views/slice.hpp>
 
@@ -17,15 +18,11 @@ enum struct field
     qual
 };
 
-// Transforms a list of field ids into a type list of integral constants storing the field ids.
-template <auto ...field_ids>
-using field_id_type_list = seqan3::type_list<std::integral_constant<decltype(field_ids), field_ids>...>;
-
 // template <typename ...policies_t>
-class sequence_record
+class record_sequence
 {
 private:
-    sequence_record * derived{};
+    record_sequence * derived{};
 
 protected:
 
@@ -35,15 +32,15 @@ public:
     //!\brief A type list over the valid fields wrapped as std::integral_constant types.
     using valid_fields_type = field_id_type_list<field::id, field::seq, field::qual>;
 
-    sequence_record() noexcept
+    record_sequence() noexcept
     {
         derived = this;
     }
-    sequence_record(sequence_record const &) = default;
-    sequence_record(sequence_record &&) = default;
-    sequence_record & operator=(sequence_record const &) = default;
-    sequence_record & operator=(sequence_record &&) = default;
-    virtual ~sequence_record() = default;
+    record_sequence(record_sequence const &) = default;
+    record_sequence(record_sequence &&) = default;
+    record_sequence & operator=(record_sequence const &) = default;
+    record_sequence & operator=(record_sequence &&) = default;
+    virtual ~record_sequence() = default;
 
     // Contract interface: Needs to be called by the implementor.
     virtual void clear()
@@ -92,7 +89,7 @@ protected:
     }
 
     // Needs to be called by the derived class to register at the base class.
-    void register_record(sequence_record * derived) noexcept
+    void register_record(record_sequence * derived) noexcept
     {
         if (derived == this)
             std::runtime_error{"You must register a derived class of this record."};
@@ -106,40 +103,6 @@ private:
     {
         if (this == derived)
             throw std::runtime_error{"The record implementation was not set. Did you forget to call register_record?"};
-    }
-};
-
-template <typename derived_record_t>
-class record_registration_policy
-{
-private:
-    friend derived_record_t;
-
-    record_registration_policy() noexcept
-    {
-        register_record_for_derived();
-    }
-
-    record_registration_policy(record_registration_policy const &) noexcept : record_registration_policy{}
-    {}
-
-    record_registration_policy(record_registration_policy &&) noexcept : record_registration_policy{}
-    {}
-
-    record_registration_policy & operator=(record_registration_policy) noexcept
-    {
-        register_record_for_derived();
-        return *this;
-    }
-
-    void register_record_for_derived() noexcept
-    {
-        as_derived()->register_record(as_derived());
-    }
-
-    derived_record_t * as_derived() noexcept
-    {
-        return static_cast<derived_record_t *>(this);
     }
 };
 
