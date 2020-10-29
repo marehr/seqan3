@@ -96,13 +96,16 @@ public:
         if (!skip_until(seqan3::is_graph, istreambuf))
             throw std::runtime_error{"Unexpected end of input"};
 
-        if (!read_until(record.id_buffer, seqan3::is_char<'\n'> || seqan3::is_char<'\r'>, istreambuf))
+        if (!read_until(record.id_buffer,
+                        seqan3::is_char<'\n'> || seqan3::is_char<'\r'>,
+                        seqan3::is_print,
+                        istreambuf))
             throw std::runtime_error{"Unexpected end of input"};
 
         constexpr auto seq_field_delimiter = is_id_delimiter || seqan3::is_eof;
         while (it != std::default_sentinel && !seq_field_delimiter(*it))
         {
-            if (!read_until(record.seq_buffer, seqan3::is_space, istreambuf))
+            if (!read_until(record.seq_buffer, seqan3::is_space, seqan3::is_alpha, istreambuf))
                 throw std::runtime_error{"Unexpected end of input"};
 
             skip_until(seqan3::is_graph, istreambuf);

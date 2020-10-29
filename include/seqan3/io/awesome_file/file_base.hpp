@@ -196,21 +196,6 @@ public:
         return cached_record == nullptr;
     }
 
-    // friend bool operator==(std::default_sentinel_t const & lhs, iterator const & rhs) noexcept
-    // {
-    //     return rhs == lhs;
-    // }
-
-    // bool operator!=(std::default_sentinel_t const & rhs) const noexcept
-    // {
-    //     return !(*this == rhs);
-    // }
-
-    // friend bool operator!=(std::default_sentinel_t const & lhs, iterator const & rhs) noexcept
-    // {
-    //     return rhs != lhs;
-    // }
-
     // Do we need this???
     // friend constexpr range_rvalue_reference_t<V> iter_move(const iterator& i)
     //   noexcept(noexcept(ranges::iter_move(i.current_)));

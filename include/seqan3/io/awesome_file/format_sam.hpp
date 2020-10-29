@@ -4,6 +4,7 @@
 #include <seqan3/std/concepts>
 #include <seqan3/std/ranges>
 #include <vector>
+#include <seqan3/std/span>
 #include <string>
 
 #include <seqan3/core/char_operations/predicate.hpp>
@@ -15,11 +16,66 @@
 namespace seqan3::awesome
 {
 
+// Header problem:
+// There is a minimal header version
+// This is the only one that is accessable
+// If more formats have a different header, then only the common type of them can be represented.
+// If a specific header is required because the information are essential, then this must be the selected header type
+// and all other formats must comply with this header type. If not they cannot be represented by the same header.
+// Present the central ideas from this.
+
 // Default definition which is overloaded for the record later.
 template <typename base_record_t>
 class record_sam
 {
     record_sam() = delete;
+};
+
+// We could offer a version type.
+
+struct sam_header : public header_base
+{
+    using return_t = std::span<char>;
+
+    std::vector<char> hd_buffer{};
+    // We can have this in a fixed order.
+    std::array<std::pair<size_t, size_t>, 4> slice_positions{};
+
+
+    return_t version()
+    {
+        return hd_buffer | views::slice(slice_positions[0].first, slice_positions[0].second);
+    }
+
+    // Should return optional
+    return_t sorting_order()
+    {
+        return hd_buffer | views::slice(slice_positions[1].first, slice_positions[1].second);
+    }
+
+    return_t sub_sorting_order()
+    {
+        return hd_buffer | views::slice(slice_positions[2].first, slice_positions[2].second);
+    }
+
+    return_t grouping()
+    {
+        return hd_buffer | views::slice(slice_positions[3].first, slice_positions[3].second);
+    }
+
+};
+
+struct read_sam_header_line_policy
+{
+    void read_header_line(stream..., sam_header & header)
+    {
+
+        // steps:
+        // 1. identify tag
+        // 2. memcpy into respective header field.
+        // 3. transform on access => simply store buffer in record and return span over the respective field.
+        // 4. evaluate validity of the field?
+    }
 };
 
 template <typename record_base_t = record_alignment>
@@ -119,8 +175,21 @@ public:
 
         // Header
         // -------------------------------------------------------------------------------------------------------------
-        if (is_char<'@'>(*std::ranges::begin(stream_view))) // we always read the header if present
+
+        while (is_char<'@'>(*it))
         {
+            read_header_line(istreambuf, record.header); -> assert one or none and if then the first
+            // @<two-letter header record type>
+            // TAB-delimited lines
+            // format TAG:VALUE except @CO
+            // Possible matches:
+            // * @HD\tcc:
+            // * @SQ\tcc:
+            // * @RG\tcc:
+            // * @PG\tcc:
+            // * @CO\t.*
+
+
             read_header(stream_view, header, ref_seqs);
 
             if (std::ranges::begin(stream_view) == std::ranges::end(stream_view)) // file has no records

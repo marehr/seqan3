@@ -43,14 +43,16 @@ public:
 
 protected:
 
-    template <typename buffer_t, typename delimiter_t>
+    template <typename buffer_t, typename delimiter_t, typename valid_char_t>
     bool read_until(buffer_t & buffer,
                     delimiter_t && delimiter,
+                    valid_char_t && validator,
                     seqan3::detail::stream_buffer_exposer<char> & streambuf)
     {
         char * current = streambuf.gptr();
-        // This assumes we know that we don't need to call underflow.
-        for (; current != streambuf.egptr() && !delimiter(*current); ++current)
+        auto checker = !delimiter && validator;
+        // Check with simd operations.
+        for (; current != streambuf.egptr() && checker(*current); ++current)
         {}
 
         size_t old_buffer_size = buffer.size();
@@ -62,10 +64,10 @@ protected:
         // We actually found the delimiter and do not need to underflow.
         if (delimiter(*current))
             return true;
-        else if (seqan3::is_eof(streambuf.underflow()))
+        else if (char v = *current; seqan3::is_eof(streambuf.underflow()) || !validator(v))
             return false;
 
-        return read_until(buffer, delimiter, streambuf);
+        return read_until(buffer, delimiter, validator, streambuf);
     }
 };
 

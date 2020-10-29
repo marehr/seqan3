@@ -141,7 +141,7 @@ struct sequence_file_input_default_traits_dna
     using sequence_alphabet                 = dna5;
 
     //!\brief The legal sequence alphabet for parsing is seqan3::dna15.
-    using sequence_legal_alphabet           = dna15;
+    using sequence_legal_alphabet           = dna5;
 
     //!\brief The type of a DNA sequence is std::vector.
     template <typename _sequence_alphabet>

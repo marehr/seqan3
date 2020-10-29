@@ -349,7 +349,7 @@ void read_awesome_decorated(benchmark::State & state)
 
 BENCHMARK(read_awesome_decorated);
 
-void read_awesome_with_conversion(benchmark::State & state)
+void read_awesome_count(benchmark::State & state)
 {
     std::istringstream istream{fasta_file};
     seqan3::awesome::sequence_file_in fin{istream, seqan3::awesome::format_fasta{}};
@@ -365,8 +365,8 @@ void read_awesome_with_conversion(benchmark::State & state)
             // seq.clear();
             // size_t s = std::ranges::distance(it->seq());
             // seq.resize(s);
-            count = std::ranges::count(it->seq() | seqan3::views::char_to<seqan3::dna5>/* | seqan3::views::convert<seqan3::dna5>*/,
-                                       seqan3::assign_rank_to(0, seqan3::dna5{}));
+            count = std::ranges::count(it->seq(),
+                                       'A');
             // std::copy_n(std::execution::par, dna5_view.begin(), s, seq.begin());
             it++;
         }
@@ -379,6 +379,41 @@ void read_awesome_with_conversion(benchmark::State & state)
     state.counters["count"] = count;
 }
 
-BENCHMARK(read_awesome_with_conversion);
+BENCHMARK(read_awesome_count);
+
+void read_awesome_add(benchmark::State & state)
+{
+    std::istringstream istream{fasta_file};
+    seqan3::awesome::sequence_file_in fin{istream, seqan3::awesome::format_fasta{}};
+
+    std::vector<std::vector<char>> set{};
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+        set.clear();
+
+        auto it = fin.begin();
+        for (size_t j = 0; j < iterations_per_run; ++j)
+        {
+            auto && seq = it->seq();
+            size_t s = seq.size();
+            std::vector<char> tmp{};
+            tmp.resize(s);
+            // auto seq_view = it->seq() | seqan3::views::char_to<seqan3::dna15> | seqan3::views::convert<seqan3::dna5>;
+            std::ranges::copy_n(seq.begin(), s, tmp.begin());
+            set.emplace_back(std::move(tmp));
+            it++;
+        }
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+    state.counters["count"] = set.size();
+}
+
+BENCHMARK(read_awesome_add);
 
 BENCHMARK_MAIN();
