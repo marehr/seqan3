@@ -1,0 +1,1 @@
+seqan3_test(formatted_file_input_test.cpp)

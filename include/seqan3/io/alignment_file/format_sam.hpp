@@ -14,7 +14,7 @@
 
 #include <seqan3/std/algorithm>
 #include <seqan3/std/concepts>
-#include <iterator>
+#include <seqan3/std/iterator>
 #include <seqan3/std/ranges>
 #include <string>
 #include <vector>
@@ -1149,6 +1149,106 @@ inline void format_sam::write_tag_fields(stream_it_t & stream_it, sam_tag_dictio
 
         std::visit(stream_variant_fn, variant);
     }
+}
+
+template <typename reference_sequence_map_t>
+struct sam_record
+{
+    std::vector<char> id_field{};
+    std::vector<char> seq_field{};
+    std::vector<char> qual_field{};
+    std::vector<cigar> cigar_field{};
+    std::vector<char> rname{};
+    reference_sequence_map_t const * reference_sequences_ptr{nullptr};
+};
+
+template <typename reference_sequence_map_t>
+class format_sam_adapter
+{
+private: // Member variable definitions
+    using record_type = sam_record<reference_sequence_map_t>;
+
+    detail::alignment_file_input_format_exposer<format_sam> format;
+    record_type record{};
+    reference_sequence_map_t const * reference_sequences{};
+    alignment_file_header<> dummy_header;
+
+public: // Public member interfaces
+
+    format_sam_adapter() = default;
+
+    format_sam_adapter(reference_sequence_map_t const & reference_sequences) :
+        reference_sequences{std::addressof(reference_sequences)}
+    {
+        record.reference_sequences_ptr = this->reference_sequences;
+    }
+
+    static std::vector<std::string> & extensions()
+    {
+        return format_sam::file_extensions;
+    }
+
+    record_type & read_record(std::istream & in_stream)
+    {
+        // wrap the actual interface call.
+        format.read_alignment_record(in_stream,
+                                     alignment_file_input_options<char>{},
+                                     std::ignore,
+                                     dummy_header,
+                                     record.seq_field,
+                                     record.qual_field,
+                                     record.id_field,
+                                     std::ignore, std::ignore,
+                                     std::ignore,  // cannot simply have the rname parsed ;.(
+                                     std::ignore, std::ignore,
+                                     record.cigar_field,
+                                     std::ignore, std::ignore, std::ignore, std::ignore, std::ignore, std::ignore);
+        return record;
+    }
+
+};
+
+format_sam_adapter() -> format_sam_adapter<int>;
+
+template <typename ref_map_t>
+format_sam_adapter(ref_map_t &) -> format_sam_adapter<ref_map_t>;
+
+// TODO: We need a concept for the alignment type.
+template <typename refs_t, typename opt_alignment_t>
+void record_to_alignment(sam_record<refs_t> const & record, opt_alignment_t & opt_alignment)
+{
+    // TODO: We need a clear concept for alignment to put it into generic code like this.
+    using alignment_t = typename opt_alignment_t::value_type;
+    using aligned_sequence_t = typename alignment_t::first_type;
+    using alphabet_t = std::ranges::range_value_t<aligned_sequence_t>;
+
+    if (record.reference_sequences_ptr == nullptr)
+    {
+        opt_alignment = std::nullopt;
+        return; // optional not set.
+    }
+
+    using std::get;
+
+    alignment_t alignment{};
+
+    // TODO: What is the error mode? Should it be optional or throw here?
+    std::string key{"ref"}; // For the proof-of-concept I try not to understand all the dependencies of the current implementation, so we just use a hard-coded key here.
+    if (auto it = record.reference_sequences_ptr->find(key); it != record.reference_sequences_ptr->end())
+    {
+        // TODO: Clipping the reference sequence must be handled properly. -> read out the length from the cigar string.
+        assign_unaligned(get<0>(alignment), it->second | views::char_to<alphabet_t>);
+    }
+    else
+    {
+        opt_alignment = std::nullopt;
+        return; // optional not set.
+    }
+
+    // TODO: Would also need some protection against empty query sequence!
+    assign_unaligned(get<1>(alignment), record.seq_field | views::char_to<alphabet_t>);
+    detail::alignment_from_cigar(alignment, record.cigar_field);
+    opt_alignment = std::move(alignment);
 }
 
 } // namespace seqan3
