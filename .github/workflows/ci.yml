@@ -297,7 +297,7 @@ jobs:
           fi
 
       - name: Build tests
-        if: !matrix.skip_build_tests
+        if: ${{!matrix.skip_build_tests}}
         env:
           CCACHE_BASEDIR: ${{ github.workspace }}
           CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -316,7 +316,7 @@ jobs:
           ccache -s || true
 
       - name: Run tests
-        if: !matrix.skip_run_tests
+        if: ${{!matrix.skip_run_tests}}
         shell: bash -ex {0}
         run: |
           cd seqan3-build
