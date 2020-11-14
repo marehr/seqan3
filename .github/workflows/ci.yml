@@ -284,16 +284,17 @@ jobs:
           mkdir seqan3-build
           cd seqan3-build
           cmake ../seqan3/test/${{ matrix.build }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}" -DSEQAN3_VERBOSE_TESTS=OFF -DSEQAN3_BENCHMARK_MIN_TIME=0.01
+
+          if [[ "${{ matrix.use_include_dependencies }}" == "true" ]]; then
+            cmake -DSEQAN3_USE_INCLUDE_DEPENDENCIES=1 .
+            make all_dependencies
+            cmake . # are tests cyclic?
+          fi
           if [[ "${{ matrix.build }}" =~ ^(unit|header|snippet|coverage)$ ]]; then
             make gtest_project
           fi
           if [[ "${{ matrix.build }}" =~ ^(performance)$ ]]; then
             make gbenchmark_project
-          fi
-          if [[ ${{ !!matrix.use_include_dependencies }} ]]; then
-            cmake -DSEQAN3_USE_INCLUDE_DEPENDENCIES=1 .
-            make all_dependencies
-            cmake . # are tests cyclic?
           fi
 
       - name: Build tests
