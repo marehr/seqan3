@@ -32,6 +32,7 @@ jobs:
             cc: "gcc-7"
             build: coverage
             build_type: Debug
+            skip_run_tests: true # Already ran by the make call
 
           - name: "Unit gcc9 (c++2a) on Linux"
             os: ubuntu-20.04
@@ -144,6 +145,18 @@ jobs:
             cc: "gcc-7"
             build: header
             build_type: Release
+
+          - name: "Non-cyclic tests gcc7"
+            os: ubuntu-20.04
+            requires_toolchain: true
+            requires_ccache: true
+            cxx: "g++-7"
+            cc: "gcc-7"
+            build: unit
+            build_type: Debug
+            use_include_dependencies: true
+            skip_build_tests: true
+            skip_run_tests: true
 
           - name: "Snippet gcc7"
             os: ubuntu-20.04
@@ -277,8 +290,14 @@ jobs:
           if [[ "${{ matrix.build }}" =~ ^(performance)$ ]]; then
             make gbenchmark_project
           fi
+          if [[ ${{ !!matrix.use_include_dependencies }} ]]; then
+            cmake -DSEQAN3_USE_INCLUDE_DEPENDENCIES=1 .
+            make all_dependencies
+            cmake . # are tests cyclic?
+          fi
 
       - name: Build tests
+        if: !matrix.skip_build_tests
         env:
           CCACHE_BASEDIR: ${{ github.workspace }}
           CCACHE_DIR: ${{ github.workspace }}/.ccache
@@ -297,7 +316,7 @@ jobs:
           ccache -s || true
 
       - name: Run tests
-        if: matrix.build != 'coverage' # Already ran by the make call
+        if: !matrix.skip_run_tests
         shell: bash -ex {0}
         run: |
           cd seqan3-build
