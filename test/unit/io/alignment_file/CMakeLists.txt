@@ -1,5 +1,5 @@
 seqan3_test(sam_tag_dictionary_test.cpp)
-seqan3_test(format_bam_test.cpp)
-seqan3_test(format_sam_test.cpp)
+seqan3_test(format_bam_test.cpp CYCLIC_DEPENDING_INCLUDES include-io-alignment_file-format_sam_test)
+seqan3_test(format_sam_test.cpp CYCLIC_DEPENDING_INCLUDES include-io-alignment_file-format_bam_test)
 seqan3_test(alignment_file_output_test.cpp)
 seqan3_test(alignment_file_input_test.cpp)
