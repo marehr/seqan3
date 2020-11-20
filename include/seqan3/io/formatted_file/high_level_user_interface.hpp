@@ -218,6 +218,7 @@ int main()
         sequence_record<aa27> record_{genbank_record}; // might work?
     }
 
+    // PREFFERED:
     for (sequence_record<aa27> record : sequence_file_input{"my_file.fq"}}) // sequence_file_input is not defined over record_type
     {
         record.sequence();// Amino acid sequence;
@@ -226,13 +227,125 @@ int main()
     // ------------------------------------------------------------------------
     // truncate_id
     // ------------------------------------------------------------------------
+    // Over engineering for something that can be done so easily by the user.
+    // Better just have dedicated recipe for this using a view.
+
     constexpr auto truncate_id = [] (std::string id) { return id.substr(id.find(' ')); };
-    for (auto && record : sequence_file_input{"my_file.[fq,fa]"}})
+    for (sequence_record && record : sequence_file_input{"my_file.[fq,fa]"}})
     {
-        record.id(truncate_id); // marehr does not like this one
-        truncate_id(record.id);
-        record.id() | views::truncate_id(); // marehr does not like views in this case
-        record.truncated_id();
+        truncate_id(record.id); // maybe as an alternative.
+        record.truncated_id(); // dedicated function of the sequence record.
+        // User can always do:
+        record.id() | std::views::take_while(!seqan3::is_space);
+    }
+}
+
+// ------------------------------------------------------------------------
+// Use Case 3: Read a sam file or bam file: Including the reference sequences, filter by mapping quality, and output the alignment.
+// ------------------------------------------------------------------------
+
+#include <seqan3/io/sam_file/all.hpp>
+#include <seqan3/core/debug_stream.hpp>
+
+using namespace seqan3;
+
+int main()
+{
+    std::unordered_map<std::string_view, std::span<seqan3::dna4>> id_sequence_map{};
+
+    std::vector<std::string> ids{};
+    std::vector<seqan3::dna5_vector> sequences{};
+
+    // step1: read ids and sequences from fasta file
+    // step2: fill id_sequence_map
+
+    // use case1:
+    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : sam_file_input{"my_file.bam"})
+    {
+        if (record.mapping_quality() > 10) // bad quality
+            continue;
+
+        seqan3::debug_stream << convert_to_alignment(record, id_sequence_map) << std::endl;
+        record.alignment(id_sequence_map); // is this better ?
+        // how to persist an alignment?
     }
 
+    // use case1.5: how to write header / footer
+    sam_file_input sam_file { "my_file.bam" };
+    sam_header header = sam_file.header(); // parses header
+    sam_file_input in{};
+    in | std::filter() | sam_file_output{in.header(), in.footer()};
+    sam_file_output out;
+    out.push_back(alignment_record{header});
+    // header from record :)
+
+    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : sam_file) // file.records()
+    {
+        if (record.mapping_quality() > 10) // bad quality
+            continue;
+
+        seqan3::debug_stream << convert_to_alignment(record, id_sequence_map) << std::endl;
+        record.alignment(id_sequence_map); // is this better ?
+        // how to persist an alignment?
+    }
+
+    // Use case - pure alignment file:
+    for (alignment_native_record native_record : alignment_file_input{"my_file.bam", id_sequence_map})
+    {
+        alignment_record<seqan3::dna5 /*alignment::sequence::value*/> record{native_record, id_sequence_map};  // the sequence type
+        // have explicit functions for different alignment builder
+        try{
+            record.alignment();
+        }
+        catch (...)
+        {
+            try{
+                record.alignment_by_map(id_sequence_map);
+            }
+            catch(...)
+            {
+                throw "Oh oh!\n";
+            }
+        }
+        // have a single function for the alignment builder
+        // if deep copy record derived by template argument of record
+        //   return type std::pair<seqan3::gap_decorator<std::span<seqan3::dna5>>, same_as 1st>
+        // otherwise if proxy record
+        //   return type std::pair<seqan3::gap_decorator<SOME_CRAZY_VIEW>, same_as 1st>
+        record.alignment(); // can I use this without map? rrahn: yes, but it throws if the format requires a map.
+        // if deep copy record derived by template argument of record
+        //   return type std::pair<seqan3::gap_decorator<std::views::all_t<typename id_sequence_map_t::value_type>>,
+        //                         seqan3::gap_decorator<std::span<seqan3::dna5>>>
+        record.alignment(id_sequence_map); // id_sequence_map is maybe unused in the builder
+
+        // what is with multiple alignments?
+        record.alignment(id_sequence_map);
+        // return type std::vector<seqan3::gap_decorator<SOME_CRAZY_VIEW>>
+    }
+
+    // use case3: if we give file the sequence-map, it needs to pass it to the record
+    alignment_file_input alignment_file{"my_file.bam"};
+    for (seqan3::alignment_record record : alignment_file)
+    {
+        record.id_sequence_map(id_sequence_map); // that means you could also set manually
+        record.alignment(); // only to allow this
+        record.alignment(id_sequence_map); // rrahn & marehr: I like this better
+        // What happens with self-contained formats that do not need the additional information of the map?
+
+    }
+
+    // use case4: pass id-map to class
+    alignment_file_input alignment_file{"my_file.bam", id_sequence_map};
+    alignment_file.id_sequence_map(id_sequence_map); // or is not minimal design
+
+    for (seqan3::alignment_record record : alignment_file)
+    {
+        record.alignment();
+    }
 }
+
+// Read a sam file or bam file: Including the reference sequences, filter by mapping quality, and output the alignment.
+
+// How would an index file (.fai) be passed / used?
+// How to do random access?
+// Filter sam file based on mapping quality and pass everything as is to the output file?
