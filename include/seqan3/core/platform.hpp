@@ -75,33 +75,33 @@
 #endif
 
 // Ranges [required]
-#if __has_include(<range/v3/version.hpp>)
-#   define RANGE_V3_MINVERSION 1100
-#   define RANGE_V3_MAXVERSION 1199
-// TODO the following doesn't actually show the current version, only its formula. How'd you do it?
-#   define SEQAN3_MSG "Your version: " SEQAN3_STR(RANGE_V3_VERSION) \
-                      "; minimum version: " SEQAN3_STR(RANGE_V3_MINVERSION) \
-                      "; expected maximum version: " SEQAN3_STR(RANGE_V3_MAXVERSION)
-#   include <range/v3/version.hpp>
-#   if RANGE_V3_VERSION < RANGE_V3_MINVERSION
-#       error Your range-v3 library is too old.
-#       pragma message(SEQAN3_MSG)
-#   elif RANGE_V3_VERSION > RANGE_V3_MAXVERSION
-#       pragma GCC warning "Your range-v3 library is possibly too new. Some features might not work correctly."
-#       pragma message(SEQAN3_MSG)
-#   endif
-#   undef SEQAN3_MSG
-#else
-#   error The range-v3 library was not included correctly. Forgot to add -I ${INSTALLDIR}/include to your CXXFLAGS?
-#endif
+// #if __has_include(<range/v3/version.hpp>)
+// #   define RANGE_V3_MINVERSION 1100
+// #   define RANGE_V3_MAXVERSION 1199
+// // TODO the following doesn't actually show the current version, only its formula. How'd you do it?
+// #   define SEQAN3_MSG "Your version: " SEQAN3_STR(RANGE_V3_VERSION) \
+//                       "; minimum version: " SEQAN3_STR(RANGE_V3_MINVERSION) \
+//                       "; expected maximum version: " SEQAN3_STR(RANGE_V3_MAXVERSION)
+// #   include <range/v3/version.hpp>
+// #   if RANGE_V3_VERSION < RANGE_V3_MINVERSION
+// #       error Your range-v3 library is too old.
+// #       pragma message(SEQAN3_MSG)
+// #   elif RANGE_V3_VERSION > RANGE_V3_MAXVERSION
+// #       pragma GCC warning "Your range-v3 library is possibly too new. Some features might not work correctly."
+// #       pragma message(SEQAN3_MSG)
+// #   endif
+// #   undef SEQAN3_MSG
+// #else
+// #   error The range-v3 library was not included correctly. Forgot to add -I ${INSTALLDIR}/include to your CXXFLAGS?
+// #endif
 
 // SDSL [required]
-#if __has_include(<sdsl/version.hpp>)
-#   include <sdsl/version.hpp>
-    static_assert(sdsl::sdsl_version_major == 3, "Only version 3 of the SDSL is supported by SeqAn3.");
-#else
-#   error The sdsl library was not included correctly. Forgot to add -I ${INSTALLDIR}/include to your CXXFLAGS?
-#endif
+// #if __has_include(<sdsl/version.hpp>)
+// #   include <sdsl/version.hpp>
+//     static_assert(sdsl::sdsl_version_major == 3, "Only version 3 of the SDSL is supported by SeqAn3.");
+// #else
+// #   error The sdsl library was not included correctly. Forgot to add -I ${INSTALLDIR}/include to your CXXFLAGS?
+// #endif
 
 // Cereal [optional]
 /*!\def SEQAN3_WITH_CEREAL

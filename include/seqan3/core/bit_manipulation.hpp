@@ -13,14 +13,14 @@
 
 #pragma once
 
-#include <meta/meta.hpp>
-
-#include <sdsl/bits.hpp>
+// #include <meta/meta.hpp>
+//
+// #include <sdsl/bits.hpp>
 
 #include <seqan3/std/bit>
 #include <climits>
 #include <seqan3/std/concepts>
-#include <utility>
+// #include <utility>
 
 // Find correct header for byte-order conversion functions.
 #if __has_include(<endian.h>) // unix GLIBC
