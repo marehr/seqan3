@@ -251,6 +251,7 @@ using namespace seqan3;
 
 int main()
 {
+    // This should be a specific class: sequence_file_index, safety functionality like crc32 checksum calculation
     std::unordered_map<std::string_view, std::span<seqan3::dna4>> id_sequence_map{};
 
     std::vector<std::string> ids{};
@@ -265,9 +266,17 @@ int main()
         if (record.mapping_quality() > 10) // bad quality
             continue;
 
-        seqan3::debug_stream << convert_to_alignment(record, id_sequence_map) << std::endl;
-        record.alignment(id_sequence_map); // is this better ?
+        // seqan3::debug_stream << convert_to_alignment(record, id_sequence_map) << std::endl;
+        seqan3::debug_stream << record.alignment(id_sequence_map) << '\n';
+        // needs to convert cigar -> alignment:
+        //    seqan3::alignment_proxy_t<id_sequence_map::sequence_type::value_type, seqan3::dna5>
+        //    -> std::pair<seqan3::gap_decorator<id_sequence_map::sequence_type::value_type,
+        //                 seqan3::gap_decorator<seqan3::dna5> // could also be std::vector<seqan3::gapped<seqan3::dna5>> if life-time can't be guaranteed
+        //                >
+        //    -> {id_sequence_map[record.reference_sequence_name() (i.e. RNAME)], record.segment_sequence (i.e. SEQ)}
         // how to persist an alignment?
+        // TODO: What is the meaning of '=' in the segment sequence field.
+        // record.segment_sequence([id_sequence_map]); // optional: when omitted '=' is not allowed in the field.
     }
 
     // use case1.5: how to write header / footer
@@ -292,9 +301,14 @@ int main()
     // Use case - pure alignment file:
     for (alignment_native_record native_record : alignment_file_input{"my_file.bam", id_sequence_map})
     {
-        alignment_record<seqan3::dna5 /*alignment::sequence::value*/> record{native_record, id_sequence_map};  // the sequence type
+        alignment_record<seqan3::dna5 /*alignment::sequence1::value*/> record{native_record, id_sequence_map};  // the squence type
+        alignment_record<seqan3::dna5 /*alignment::sequence1::value*/, // sequence1 = database/reference
+                         seqan3::dna4 /*alignment::sequence2::value = alignment::sequence1::value (optional)*/>
+            record{native_record, id_sequence_map};
+
         // have explicit functions for different alignment builder
-        try{
+        try
+        {
             record.alignment();
         }
         catch (...)
@@ -346,6 +360,110 @@ int main()
 
 // Read a sam file or bam file: Including the reference sequences, filter by mapping quality, and output the alignment.
 
-// How would an index file (.fai) be passed / used?
-// How to do random access?
+// ------------------------------------------------------------------------
+// Use Case 4: How would an index file (.fai) be passed / used? How to do random access?
+// ------------------------------------------------------------------------
+#include <seqan3/io/fasta/all.hpp>
+#include <seqan3/core/debug_stream.hpp>
+
+using namespace seqan3;
+
+int main()
+{
+    // REMARKS: does only work for seekable streams (like filestreams)
+    fasta_index fai{"my_file.fai"}; // load from serialised index ->
+    fai.build("my_file.fa");
+    fasta_file_input fin{"my_file.fa"};
+
+    fasta_index fai{fin}; // load from fasta file and construct on the fly
+    fasta_index fai{"my_file.fa"}; // load from fasta file and construct on the fly
+
+    // rene is against this: same class name, but different class properties
+    fasta_file_input fin{"my_file.fa", fasta_index{"my_file.fai"}}; // CTAD? fasta_file_input<bool is_random_acces>
+    // or explicit class
+    indexed_fasta_file_input ifin{"my_file.fa"}; // searches for "my_file.fai" if it doesn't exist => throw
+    indexed_fasta_file_input ifin{"my_file.fa", fasta_index{"my_file.fai"}}; // -> random access range, also allows sequential
+
+    indexed_file_input ifin{fasta_file_input{"my_file.fa"}}; // rrahn: How does indexed_file_input know the index extension to look for, e.g. *.fai?
+    indexed_file_input ifin{fasta_file_input{"my_file.fa"}, fasta_index{"my_file.fai"}}; // marehr: indices are quite close the format, how can the internals talk to that?
+    indexed_file_input ifin{std::move(fin), fasta_index{"my_file.fai"}};
+    fin.index(fasta_index{"my_file.fai"}); // set index
+    fin.index() // get the index?
+
+    // we need static type information that the file-range is random access
+
+    // =====
+
+    // We want:
+    indexed_fasta_file_input fin{"my_file.fa"}; // throws if .fai is missing
+    indexed_fasta_file_input fin{"my_file.fa", fasta_index{"my_file.fai"}};
+
+    // Some thoughts:
+    // fasta_index does not explicitly store byte position within file where the ">my_id" starts
+    // this can be inferred by the previous record
+    fasta_file_input_internal.seek_to(fasta_index.at("id1").record_seek_position()); // can be sought to
+    fasta_index.record.sequence_length();
+    fasta_index.record.wrap_around();
+    fasta_index.record.wrap_around_bytes();
+    fasta_index.record.record_seek_position();
+    fasta_index.record.seek_position();
+    fasta_index.at("id1"); // by id -> fasta_index.record
+    fasta_index.at(0); // by position -> fasta_index.record
+
+    // ------------------------------------------
+    // Open: index creation
+    // alternative 1:
+    fasta_index fai{"my_file.fai"}; // opens existing fai
+    fasta_index fai{"my_file.fa"};  // creates fai from fa file -> eager
+    fasta_index.save();             // name can be stored internally.
+
+    // alternative 2:
+    fasta_index fai{"my_file.fai"}; // opens existing fai
+    fasta_index fai{};              // has no custom constructor
+    fai.build("my_file.fa");        // creates fai from fa file -> lazy;
+    fai.save("my_file.fai");        // stores fai
+    fai.save();                     // name could be stored when calling build. If no build then I don't have to store anything anyway, but does the user know?
+
+    // Question? Do we ever need to specify this.
+    fasta_record<dna5> record = fin.at("0"); // 0 based enumeration
+    fasta_record<dna5> record = fin.at(0); // 0 based enumeration
+
+    // or by operator[]
+    debug_stream << fasta_record<dna5>{fin["sequence id"]}.sequence() << "\n";
+    debug_stream << fasta_record<dna5>{fin[0]}.sequence() << "\n";
+
+    // As a user:
+
+    sequence_file_input fin{argv[1]}; // some input file
+    // if possible get index for file: How?
+    sequence_file_index sfi{}; // can only be opened not created
+    if (has_index_for_sequence_file(fin))
+        sfi.build();
+
+    // gives the byte file position where the parser can start parsing the record
+    sequence_file_index.record_position_by_id("ID");
+    sequence_file_index.record_seek_position("ID") -> int{};
+    sequence_file_index.record_seek_position(0) -> int{};
+
+    sequence_file_input sfin{argv[0], fasta_format{}, bam_format{threads}, sam_format{}}; // looks identical to indexed sequence file
+    indexed_sequence_file_input isfin{argv[0], fasta_format{}, bam_format{}}; // check: only formats that support index, they need to expose the index file extension,
+    // requirements:
+        // * only formats that can be indexed are allowed -> can be checked easily
+        // * index of format is detected by same file name including the associated index type, fasta -> fai, cram => [bai, crai]
+        // * throw if the corresponding index could not be found!
+        // * allow a hint to search in another directory for the corresponding index.
+
+    // -> return type is user record?
+
+    // can we do this? can we do everything so lazy that we can use views::slice that does the same as an explicit interface
+    sequence_region_record & rec = isfin["chr1"];
+    seqan3::dna5_vector sequence = rec.sequence(start, end); // native record?
+    seqan3::dna5_vector sequence = rec.sequence() | views::slice(start, end); // native record?
+
+    // or do we want to explicitly make this a feature?
+    sequence_record & rec = isfin[sequence_region{"chr1", start, end}];
+    seqan3::dna5_vector sequence = rec.sequence(); // only sequence [start, end)
+}
+
+
 // Filter sam file based on mapping quality and pass everything as is to the output file?
