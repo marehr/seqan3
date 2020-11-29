@@ -465,5 +465,87 @@ int main()
     seqan3::dna5_vector sequence = rec.sequence(); // only sequence [start, end)
 }
 
+// ------------------------------------------------------------------------
+// Use Case 5: // Filter sam file based on mapping quality and pass everything as is to the output file?
+// ------------------------------------------------------------------------
+#include <seqan3/io/sam/all.hpp>
+#include <seqan3/core/debug_stream.hpp>
 
-// Filter sam file based on mapping quality and pass everything as is to the output file?
+using namespace seqan3;
+
+int main()
+{
+    // Open fields.
+    sam_file_input sin{"my_file.sam|bam|cram"};
+    sam_file_output sout{"my_file.sam|bam|cram"};
+
+    // With conversion
+    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : sin)
+    {
+        if (record.mapping_quality() > 30)
+            sout.push_back(record);
+    }
+
+    // As pipe notation, with no memory conversion
+    // No memory is touched except the one for the conversion to the mapping quality.
+    // Everything else is passed to the out file as given.
+    sin | std::views::filter([](seqan3::sam_record_proxy<seqan3::dna5, seqan3::phred42> && record)
+    {
+        return record.mapping_quality() > 30;
+    }) | sout;
+}
+
+// ------------------------------------------------------------------------
+// Use Case 6: // Writing to the output file:
+// ------------------------------------------------------------------------
+
+/* Requirements:
+ *
+ * ### Common
+ *
+ * * output_file can always write native input record[proxy] type
+ *  * all memory locations are known and the format is known.
+ *  * native_fasta_record[_proxy] -> id and seq format is known. memory is known
+ *  * user_fasta_record[_proxy] -> id and seq type known, if comes from input, but what if comes from user?
+ * *
+ *
+ */
+
+    std::string id{"name of it"};
+    std::vector<my_alphabet> my_seq{"HAYHAYHAYDAHDHADYHAD"};
+
+    fasta_file_output fout{"path.fa"};
+    fout.push_back(fasta_record{id, my_seq}); // how do we know the different types with type erasure
+
+    // Should we copy or not? the type is detected from the user.
+    // is it the same as the user record?
+
+template <output_format ...formats_t>
+class sequence_output_file
+{
+    template <output_format ...ctor_formats_t>
+    sequence_output_file(std::filesystem::path const & path, ctor_formats_t && ...formats)
+    {
+        select_format = select(path.extension(), formats_t...);
+    }
+
+    /* Implicit conversion from all user records that inherit from sequence_record_native
+     * we could offer some explict conversion from tuple here as well
+     */
+    template <typename seq_t, typename qual_t>
+    push_back(sequence_record_native && record)
+    {
+        std::visit([&] (auto format) {
+            seqan3::write_record(format, *ostream, record); // CPO?
+            format.write_record(*ostream, record);
+        }, selected_format);
+    }
+
+private:
+
+    std::unique_ptr<std::ostream> ostream{};
+    std::variant<formats_t...> selected_format{};
+};
+
+template <output_format ...formats_t>
+sequence_output_file(formats_t && ...) -> sequence_output_file<std::remove_cvref_t<formats_t>>;
