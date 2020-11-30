@@ -348,6 +348,23 @@ int main()
 
     }
 
+    // After looking at sam / bam:
+    // * reference_name -> (reference_position, reference_sequence) // for alignment and sam
+    // * reference_name -> reference_position // for bam header
+    // * reference_position -> sequence_length // for bam header
+    // * reference_position -> reference_name // from reference name to sequence
+    // * reference_position -> reference_sequence // we need this
+
+    // header{};
+    // record.reference_id = id_sequence_map["chr23"sv]; // 0, 1, 2, 3
+    // record.reference_sequence(id_sequence_map);
+
+    // bam output:
+
+    // record.refID = magic_data_structure.position_for("reference name"sv);
+    // sam output: intern -> magic_data_structure.reference_name_for(record.refID)
+    // alignment: magic_data_structure.sequence_for(record.refID);  // -> size(magic_data_structure.sequence_for(record.refID))
+
     // use case4: pass id-map to class
     alignment_file_input alignment_file{"my_file.bam", id_sequence_map};
     alignment_file.id_sequence_map(id_sequence_map); // or is not minimal design
@@ -367,6 +384,41 @@ int main()
 #include <seqan3/core/debug_stream.hpp>
 
 using namespace seqan3;
+
+/*how should fai look like, construction, loading, saving*/
+
+// Use case 1: index exists
+// a)
+fasta_index fai{"my_file.fai"}; // loads from disk.
+
+// b)
+fasta_index fai{};
+fai.open("my_file.fai"); // loads from disk.
+
+// Use case 2: index creation without saving
+fasta_index fai{};
+fai.build("my_file.fa"); // open internally the correct input file.
+fai.build(fasta_file_input{"my_file.fa"}); // or
+fai.build(fasta_file_input{istream}); // or
+
+// Use case 3: index creation with saving
+fasta_index fai{};
+fai.build("path_to/my_file.fa");
+fai.save(); // stores the fai_index with the name: path_to/my_file.fa.fai
+fai.save("path_to/my_file.fa.fai"); // stores the fai_index with the name: other_dir/my_file.fa.fai; other_dir must exist.
+// PROBLEM: sync name with .fai extension: oh you forgot to write my_fasta_index // .fa.fai; fq.fai
+
+
+// REMARKS: does only work for seekable streams (like filestreams)
+fasta_index fai{}; // load from serialised index ->
+
+{
+    fasta_index fai{fasta_file_input{istream}};
+    fasta_index fai{fasta_file_input{"my_file.fa"}}; // load from fasta file and construct on the fly
+    fai.save("my_file.fai");                         // save?
+}
+
+/**/
 
 int main()
 {
@@ -445,6 +497,8 @@ int main()
     sequence_file_index.record_seek_position("ID") -> int{};
     sequence_file_index.record_seek_position(0) -> int{};
 
+    // problem: we dont know which sequence file will be opened (if we knew we could use format specific file, like fasta_index)
+    //          so we can only guess by extension with valid scheme (e.g .fai, .bai)
     sequence_file_input sfin{argv[0], fasta_format{}, bam_format{threads}, sam_format{}}; // looks identical to indexed sequence file
     indexed_sequence_file_input isfin{argv[0], fasta_format{}, bam_format{}}; // check: only formats that support index, they need to expose the index file extension,
     // requirements:
@@ -476,28 +530,91 @@ using namespace seqan3;
 int main()
 {
     // Open fields.
-    sam_file_input sin{"my_file.sam|bam|cram"};
-    sam_file_output sout{"my_file.sam|bam|cram"};
+    sam_file_input fin{"my_file.sam|bam|cram"};
+    sam_file_output fout{"my_file.sam|bam|cram"};
 
-    // With conversion
-    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : sin)
+    // sam_record_native is a temporary within the fin with memory_span of the underlying streambuffer within fin.
+        // Example for a fasta sequence field: vector over memory spans
+
+    // With conversion (fin -> sam_record_native & -> sam_record_proxy (make move-only, shallow-copy, copies all pointers to the memory locations, e.g. sequence_start, sequence_end, id_start, id_end))
+    for (seqan3::sam_record_proxy<seqan3::dna5, seqan3::phred42> record : fin)
     {
         if (record.mapping_quality() > 30)
-            sout.push_back(record);
+            fout.push_back(record);
     }
 
     // As pipe notation, with no memory conversion
     // No memory is touched except the one for the conversion to the mapping quality.
     // Everything else is passed to the out file as given.
-    sin | std::views::filter([](seqan3::sam_record_proxy<seqan3::dna5, seqan3::phred42> && record)
+    fin | std::views::filter([](seqan3::sam_record_proxy<seqan3::dna5, seqan3::phred42> && record)
     {
         return record.mapping_quality() > 30;
-    }) | sout;
+    }) | fout; // marehr: in favour of pipes::push_back(fout); syntax
+
+    // better: use another library like pipes
+    std::ranges::move(fin /* | ...*/, pipes::push_back(fout));
 }
 
 // ------------------------------------------------------------------------
-// Use Case 6: // Writing to the output file:
+// Use Case 6a: // Writing to the output file:
+// Read SAM/BAM in, subtract 1 from MAPQ and write back out.
 // ------------------------------------------------------------------------
+
+#include <seqan3/io/sam/all.hpp>
+#include <seqan3/core/debug_stream.hpp>
+
+using namespace seqan3;
+
+int main()
+{
+    // Open fields.
+    sam_file_input fin{"my_file.sam|bam|cram"};
+    sam_file_output fout{"my_file.sam|bam|cram"};
+
+    // *fin.begin() -> seqan3::sam_record_native.mapping_quality() -> does not work! needs to point ot correct usage
+
+    // sam_record is full deep copy, user can modify any field
+    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : fin) // in construction we copy the entire data
+    {
+        auto & mapping = record.mapping_quality().value(); // or --record.mapping_quality().value(); // read-write access
+        mapping -= 1;
+        fout.push_back(record);
+    }
+
+    // I can make custom solution here if needs to be more efficient (i.e. operate on underlying byte buffers)
+    for (modify_mapping_quality_only_record record : fin)
+    {
+        --record.mapping_quality();
+        fout.push_back(modify_mapping_quality_only_record);
+    }
+}
+
+// ------------------------------------------------------------------------
+// Use Case 6b: // Writing to the output file:
+// Read SAM/BAM in, write out again but CIGAR replaced with “*”
+// ------------------------------------------------------------------------
+// bye!
+#include <seqan3/io/sam/all.hpp>
+#include <seqan3/core/debug_stream.hpp>
+
+using namespace seqan3;
+
+int main()
+{
+    // Open fields.
+    sam_file_input fin{"my_file.sam|bam|cram"};
+    sam_file_output fout{"my_file.sam|bam|cram"};
+
+    // sam_record is full deep copy, user can modify any field
+    for (seqan3::sam_record<seqan3::dna5, seqan3::phred42> record : fin) // in construction we copy the entire data
+    {
+        auto & cigar_string = record.cigar_string(); // read-write access
+        cigar_string = std::nullopt;
+        fout.push_back(record);
+    }
+}
+
+////// How to write out a file.
 
 /* Requirements:
  *
@@ -532,9 +649,10 @@ class sequence_output_file
     /* Implicit conversion from all user records that inherit from sequence_record_native
      * we could offer some explict conversion from tuple here as well
      */
-    template <typename seq_t, typename qual_t>
-    push_back(sequence_record_native && record)
+    template <typename record_t>
+    push_back(record_t && record)
     {
+        // record.id(); // has any representation
         std::visit([&] (auto format) {
             seqan3::write_record(format, *ostream, record); // CPO?
             format.write_record(*ostream, record);
