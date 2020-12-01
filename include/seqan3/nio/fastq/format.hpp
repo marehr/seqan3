@@ -40,7 +40,10 @@
 #include <seqan3/range/views/take_until.hpp>
 #include <seqan3/utility/char_operations/predicate.hpp>
 
-namespace seqan3
+// new header
+#include <seqan3/nio/fastq/record_raw.hpp>
+
+namespace seqan3::nio
 {
 
 /*!\brief       The FastQ format.
@@ -94,6 +97,57 @@ public:
         { "fastq" },
         { "fq"    }
     };
+
+// protected: TODO visibility
+    template <typename stream_type>
+    fastq_record_raw read_record(stream_type & stream)
+    {
+        // a new record (i.e. ++begin(fin)) "invalidates" old memory and overwrites it
+        _complete_record_data__id.clear();
+        _complete_record_data__sequence.clear();
+        _complete_record_data__quality_sequence.clear();
+
+        // restore original byte sequence which is
+        //     @<ID BYTES>\n         // these bytes are contained in id_raw()
+        //     <SEQ BYTES>\n         // these bytes are contained in sequence()
+        //     +\n                   // these bytes are contained in quality_sequence()
+        //     <QUAL BYTES>\n        // these bytes are contained in quality_sequence()
+        // NOTE: we want to store only spans of the underlying original byte buffer
+        _complete_record_data__id.push_back('@'); // id starts with @ char
+        _complete_record_data__quality_sequence.push_back('+'); // sequence starts with + char
+        _complete_record_data__quality_sequence.push_back('\n'); // followed by \n
+
+        // NOTE: this should in the future just return spans that say id starts in memory here and end in memory here
+        read_sequence_record(stream,
+                             sequence_file_input_options<char, false>{},
+                             _complete_record_data__sequence, // copies <SEQ BYTES>
+                             _complete_record_data__id, // copies <ID BYTES>
+                             _complete_record_data__quality_sequence); // copies <QUAL BYTES>
+
+        // restore original byte sequence
+        _complete_record_data__id.push_back('\n'); // id ends with \n char
+        _complete_record_data__sequence.push_back('\n'); // sequence ends with \n char
+        _complete_record_data__quality_sequence.push_back('\n'); // quality_sequence ends with \n or EOF char
+
+        return
+        {
+            std::span<char /*std::byte*/>{_complete_record_data__id.data(), _complete_record_data__id.size()},
+            std::span<char /*std::byte*/>{_complete_record_data__sequence.data(), _complete_record_data__sequence.size()},
+            std::span<char /*std::byte*/>{_complete_record_data__quality_sequence.data(), _complete_record_data__quality_sequence.size()}
+        };
+    }
+
+protected:
+
+    // if we have iostream buffers that don't contain the complete record and the iostream buffer is
+    // not seekable, we need to store that record somewhere. This emulates this.
+    // std::vector<std::byte> _complete_record_data; // TODO: this should be an iostream_buf
+
+    // WORKAROUND: current impl needs 3 different container, all of these should only be cached in one single
+    // memory segment, i.e. _complete_record_data.
+    std::vector<char /*std::byte will not work because current impl assumes char*/> _complete_record_data__id;
+    std::vector<char /*std::byte will not work because current impl assumes char*/> _complete_record_data__sequence;
+    std::vector<char /*std::byte will not work because current impl assumes char*/> _complete_record_data__quality_sequence;
 
 protected:
 
