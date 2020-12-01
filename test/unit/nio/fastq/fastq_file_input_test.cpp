@@ -20,6 +20,12 @@ using namespace seqan3::nio;
 TEST(nio_fastq, file_input)
 {
     fastq_file_input fin{"hello.fasta"};
+    for (auto && record : fin)
+    {
+        seqan3::debug_stream << record.id_raw() << "\n"
+                             << record.sequence_raw() << "\n"
+                             << record.quality_sequence_raw() << "\n";
+    }
 }
 
 TEST(nio_fastq, read_fastq_record)
