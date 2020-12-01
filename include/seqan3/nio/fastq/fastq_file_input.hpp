@@ -45,35 +45,8 @@
 #include <seqan3/std/ranges>
 #include <string>
 
-// Included later!
-struct fastq_record_raw
-{
-    std::string _id_raw;
-    std::string _sequence_raw;
-    std::string _quality_raw;
-
-    std::string & id_raw() { return _id_raw; }
-    std::string & sequence_raw() { return _sequence_raw; }
-    std::string & quality_sequence_raw() { return _quality_raw; }
-
-    void clear()
-    {
-        _id_raw.clear();
-        _sequence_raw.clear();
-        _quality_raw.clear();
-    }
-};
-
-// Included later!
-class fastq_format
-{
-public:
-
-    fastq_record_raw read_record(std::istream & /*istream*/)
-    {
-        return {"id", "seq", "qual"};
-    }
-};
+#include <seqan3/nio/fastq/format.hpp>
+#include <seqan3/nio/fastq/record_raw.hpp>
 
 namespace seqan3::nio
 {
@@ -671,7 +644,7 @@ protected:
     void read_next_record()
     {
         // clear the record
-        record_buffer.clear();
+        // record_buffer.clear();
 
         // at end if we could not read further
         if ((std::istreambuf_iterator<char>{*secondary_stream} == std::istreambuf_iterator<char>{}))
