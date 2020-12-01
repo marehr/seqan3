@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * brief Provides the seqan3::format_fastq.
+ * brief Provides the seqan3::fastq_format.
  * \author Hannes Hauswedell <hannes.hauswedell AT fu-berlin.de>
  */
 
@@ -74,18 +74,18 @@ namespace seqan3
  *   * writing the ID to the `+`-line also (line is always ignored when reading)
  *
  */
-class format_fastq
+class fastq_format
 {
 public:
     /*!\name Constructors, destructor and assignment
      * \{
      */
-    format_fastq() noexcept = default; //!< Defaulted.
-    format_fastq(format_fastq const &) noexcept = default; //!< Defaulted.
-    format_fastq & operator=(format_fastq const &) noexcept = default; //!< Defaulted.
-    format_fastq(format_fastq &&) noexcept = default; //!< Defaulted.
-    format_fastq & operator=(format_fastq &&) noexcept = default; //!< Defaulted.
-    ~format_fastq() noexcept = default; //!< Defaulted.
+    fastq_format() noexcept = default; //!< Defaulted.
+    fastq_format(fastq_format const &) noexcept = default; //!< Defaulted.
+    fastq_format & operator=(fastq_format const &) noexcept = default; //!< Defaulted.
+    fastq_format(fastq_format &&) noexcept = default; //!< Defaulted.
+    fastq_format & operator=(fastq_format &&) noexcept = default; //!< Defaulted.
+    ~fastq_format() noexcept = default; //!< Defaulted.
     //!\}
 
     //!\brief The valid file extensions for this format; note that you can modify this value.
