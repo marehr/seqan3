@@ -13,6 +13,7 @@
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/nio/fastq/fastq_file_input.hpp>
 #include <seqan3/nio/fastq/record.hpp>
+#include <seqan3/nio/fastq/record_select.hpp>
 #include <seqan3/nio/fastq/record_proxy.hpp>
 
 using namespace seqan3::nio;
@@ -47,5 +48,16 @@ TEST(nio_fastq, read_fastq_record_proxy)
         seqan3::debug_stream << record.id() << "\n"
                              << record.sequence() << "\n"
                              << record.quality_sequence() << "\n";
+    }
+}
+
+TEST(nio_fastq, read_fastq_record_select)
+{
+    fastq_file_input fin{"hello.fasta"};
+    for (fastq_record_select<field_id, field_seq<seqan3::dna5>> record : fin)
+    {
+        seqan3::debug_stream << record.id() << "\n"
+                            << record.sequence() << "\n";
+                            //  << record.quality_sequence() << "\n"; // Does not compile anymore
     }
 }

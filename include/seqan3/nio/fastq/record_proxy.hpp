@@ -18,8 +18,11 @@ namespace seqan3::nio
 {
 
 template <writable_alphabet sequence_alphabet_t, writable_alphabet sequence_quality_alphabet_t>
-class fastq_record_proxy : public fastq_record_raw
+class fastq_record_proxy
 {
+private:
+
+    fastq_record_raw & raw_record{};
 public:
     fastq_record_proxy() = delete;
     fastq_record_proxy(fastq_record_proxy const &) = delete;
@@ -28,19 +31,19 @@ public:
     fastq_record_proxy & operator=(fastq_record_proxy &&) = default;
     ~fastq_record_proxy() = default;
 
-    fastq_record_proxy(fastq_record_raw raw_record) : fastq_record_raw{std::move(raw_record)}
+    fastq_record_proxy(fastq_record_raw & raw_record) : raw_record{raw_record}
     {}
 
-    auto id() { return this->id_raw(); }
+    auto id() { return raw_record.id_raw(); }
     auto sequence()
     {
-        return this->sequence_raw() |
+        return raw_record.sequence_raw() |
                std::views::transform([] (char elem) { return assign_char_to(elem, sequence_alphabet_t{}); });
     }
 
     auto quality_sequence()
     {
-        return this->quality_sequence_raw() |
+        return raw_record.quality_sequence_raw() |
                std::views::transform([] (char elem) { return assign_char_to(elem, sequence_quality_alphabet_t{}); } );
     }
 };
