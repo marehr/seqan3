@@ -9,6 +9,8 @@
 
 #include <seqan3/nio/fastq/record_select.hpp>
 
+#include <seqan3/nio/fastq/record_raw.hpp>
+
 namespace seqan3::nio
 {
 
