@@ -15,49 +15,65 @@
 #include <seqan3/nio/fastq/record.hpp>
 #include <seqan3/nio/fastq/record_select.hpp>
 #include <seqan3/nio/fastq/record_proxy.hpp>
+#include <seqan3/test/expect_range_eq.hpp>
 
 using namespace seqan3::nio;
 
 TEST(nio_fastq, file_input)
 {
-    fastq_file_input fin{"hello.fasta"};
+    fastq_file_input fin{"hello.fastq"};
     for (auto && record : fin)
     {
-        seqan3::debug_stream << record.id_raw() << "\n"
-                             << record.sequence_raw() << "\n"
-                             << record.quality_sequence_raw() << "\n";
+        std::string raw_data = std::string{record.id_raw().begin(), record.id_raw().end()}
+                             + std::string{record.sequence_raw().begin(), record.sequence_raw().end()}
+                             + std::string{record.quality_sequence_raw().begin(), record.quality_sequence_raw().end()};
+
+        EXPECT_EQ(raw_data, "@SIM:1:FCX:1:15:6329:1045 1:N:0:2\n"
+                            "TCGCACTCAACGCCCTGCATATGACAAGACAGAATC\n"
+                            "+\n"
+                            "<>;##=><9=AAAAAAAAAA9#:<#<;<<<????#=\n");
     }
 }
 
 TEST(nio_fastq, read_fastq_record)
 {
-    fastq_file_input fin{"hello.fasta"};
+    using seqan3::operator""_dna5;
+    using seqan3::operator""_phred63;
+    using namespace std::literals;
+
+    fastq_file_input fin{"hello.fastq"};
     for (fastq_record<seqan3::dna5, seqan3::phred63> const & record : fin)
     {
-        seqan3::debug_stream << record.id() << "\n"
-                             << record.sequence() << "\n"
-                             << record.quality_sequence() << "\n";
+        EXPECT_EQ(record.id(), "SIM:1:FCX:1:15:6329:1045 1:N:0:2"sv);
+        EXPECT_EQ(record.sequence(), "TCGCACTCAACGCCCTGCATATGACAAGACAGAATC"_dna5);
+        EXPECT_EQ(record.quality_sequence(), "<>;##=><9=AAAAAAAAAA9#:<#<;<<<????#="_phred63);
     }
 }
 
 TEST(nio_fastq, read_fastq_record_proxy)
 {
-    fastq_file_input fin{"hello.fasta"};
+    using seqan3::operator""_dna5;
+    using seqan3::operator""_phred63;
+    using namespace std::literals;
+
+    fastq_file_input fin{"hello.fastq"};
     for (fastq_record_proxy<seqan3::dna5, seqan3::phred63> record : fin)
     {
-        seqan3::debug_stream << record.id() << "\n"
-                             << record.sequence() << "\n"
-                             << record.quality_sequence() << "\n";
+        EXPECT_RANGE_EQ(record.id(), "SIM:1:FCX:1:15:6329:1045 1:N:0:2"sv);
+        EXPECT_RANGE_EQ(record.sequence(), "TCGCACTCAACGCCCTGCATATGACAAGACAGAATC"_dna5);
+        EXPECT_RANGE_EQ(record.quality_sequence(), "<>;##=><9=AAAAAAAAAA9#:<#<;<<<????#="_phred63);
     }
 }
 
 TEST(nio_fastq, read_fastq_record_select)
 {
-    fastq_file_input fin{"hello.fasta"};
+    using seqan3::operator""_dna5;
+    using namespace std::literals;
+
+    fastq_file_input fin{"hello.fastq"};
     for (fastq_record_select<field_id, field_seq<seqan3::dna5>> record : fin)
     {
-        seqan3::debug_stream << record.id() << "\n"
-                            << record.sequence() << "\n";
-                            //  << record.quality_sequence() << "\n"; // Does not compile anymore
+        EXPECT_EQ(record.id(), "SIM:1:FCX:1:15:6329:1045 1:N:0:2"sv);
+        EXPECT_EQ(record.sequence(), "TCGCACTCAACGCCCTGCATATGACAAGACAGAATC"_dna5);
     }
 }
