@@ -31,10 +31,8 @@ public:
     field_id() = default;
     field_id(fastq_record_raw & raw_record) : _id{}
     {
-        // TODO: out-source this as convenient function
-        _id.resize(raw_record.id_raw().size());
-        // drop first byte @ and last byte \n
-        std::ranges::copy(raw_record.id_raw().subspan(1, raw_record.id_raw().size() - 1 - 1),
+        _id.resize(raw_record.id_transform().size());
+        std::ranges::copy(raw_record.id_transform(),
                           _id.begin());
     }
 
@@ -53,9 +51,8 @@ public:
     field_seq() = default;
     field_seq(fastq_record_raw & raw_record)
     {
-        _sequence.resize(raw_record.sequence_raw().size());
-        // drop last byte \n
-        std::ranges::copy(raw_record.sequence_raw().subspan(0, raw_record.sequence_raw().size() - 1) |
+        _sequence.resize(raw_record.sequence_transform().size());
+        std::ranges::copy(raw_record.sequence_transform() |
                           std::views::transform([] (char elem) { return assign_char_to(elem, sequence_alphabet_t{}); } ),
                           _sequence.begin());
     }
@@ -75,9 +72,8 @@ public:
     field_qual() = default;
     field_qual(fastq_record_raw & raw_record)
     {
-        _quality_sequence.resize(raw_record.quality_sequence_raw().size());
-        // drop first two bytes +\n and last byte \n
-        std::ranges::copy(raw_record.quality_sequence_raw().subspan(2, raw_record.quality_sequence_raw().size() - 2 - 1) |
+        _quality_sequence.resize(raw_record.quality_sequence_transform().size());
+        std::ranges::copy(raw_record.quality_sequence_transform() |
                           std::views::transform([] (char elem) { return assign_char_to(elem, sequence_quality_alphabet_t{}); } ),
                           _quality_sequence.begin());
     }

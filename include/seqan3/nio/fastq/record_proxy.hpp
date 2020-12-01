@@ -14,6 +14,8 @@
 
 #include <seqan3/alphabet/concept.hpp>
 
+#include <seqan3/nio/fastq/record_raw.hpp>
+
 namespace seqan3::nio
 {
 
@@ -34,16 +36,17 @@ public:
     fastq_record_proxy(fastq_record_raw & raw_record) : raw_record{raw_record}
     {}
 
-    auto id() { return raw_record.id_raw(); }
+    auto id() { return raw_record.id_transform(); }
+
     auto sequence()
     {
-        return raw_record.sequence_raw() |
+        return raw_record.sequence_transform() |
                std::views::transform([] (char elem) { return assign_char_to(elem, sequence_alphabet_t{}); });
     }
 
     auto quality_sequence()
     {
-        return raw_record.quality_sequence_raw() |
+        return raw_record.quality_sequence_transform() |
                std::views::transform([] (char elem) { return assign_char_to(elem, sequence_quality_alphabet_t{}); } );
     }
 };
