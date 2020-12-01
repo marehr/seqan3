@@ -29,9 +29,9 @@ struct fastq_record_raw
     std::string _sequence_raw;
     std::string _quality_raw;
 
-    std::string id_raw() { return _id_raw; }
-    std::string sequence_raw() { return _sequence_raw; }
-    std::string quality_raw() { return _quality_raw; }
+    std::string & id_raw() { return _id_raw; }
+    std::string & sequence_raw() { return _sequence_raw; }
+    std::string & quality_sequence_raw() { return _quality_raw; }
 };
 
 class fastq_format

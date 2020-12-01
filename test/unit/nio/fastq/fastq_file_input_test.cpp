@@ -7,11 +7,27 @@
 
 #include <gtest/gtest.h>
 
+
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/alphabet/quality/phred63.hpp>
+#include <seqan3/core/debug_stream.hpp>
 #include <seqan3/nio/fastq/fastq_file_input.hpp>
+#include <seqan3/nio/fastq/record.hpp>
 
 using namespace seqan3::nio;
 
 TEST(nio_fastq, file_input)
 {
     fastq_file_input fin{"hello.fasta"};
+}
+
+TEST(nio_fastq, read_fastq_record)
+{
+    fastq_file_input fin{"hello.fasta"};
+    for (fastq_record<seqan3::dna5, seqan3::phred63> const & record : fin)
+    {
+        seqan3::debug_stream << record.id() << "\n"
+                             << record.sequence() << "\n"
+                             << record.quality_sequence() << "\n";
+    }
 }
