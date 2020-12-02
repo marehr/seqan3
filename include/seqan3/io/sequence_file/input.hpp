@@ -97,20 +97,21 @@ namespace seqan3
  */
 //!\}
 //!\cond
-template <typename t>
-SEQAN3_CONCEPT sequence_file_input_traits = requires (t v)
-{
-    requires writable_alphabet<typename t::sequence_alphabet>;
-    requires writable_alphabet<typename t::sequence_legal_alphabet>;
-    requires explicitly_convertible_to<typename t::sequence_legal_alphabet, typename t::sequence_alphabet>;
-    requires sequence_container<typename t::template sequence_container<typename t::sequence_alphabet>>;
-
-    requires writable_alphabet<typename t::id_alphabet>;
-    requires sequence_container<typename t::template id_container<typename t::id_alphabet>>;
-
-    requires writable_quality_alphabet<typename t::quality_alphabet>;
-    requires sequence_container<typename t::template quality_container<typename t::quality_alphabet>>;
-};
+// template <typename t>
+// SEQAN3_CONCEPT sequence_file_input_traits = requires (t v)
+// {
+//     requires true;
+//     // requires writable_alphabet<typename t::sequence_alphabet>;
+//     // requires writable_alphabet<typename t::sequence_legal_alphabet>;
+//     // requires explicitly_convertible_to<typename t::sequence_legal_alphabet, typename t::sequence_alphabet>;
+//     // requires sequence_container<typename t::template sequence_container<typename t::sequence_alphabet>>;
+//     //
+//     // requires writable_alphabet<typename t::id_alphabet>;
+//     // requires sequence_container<typename t::template id_container<typename t::id_alphabet>>;
+//     //
+//     // requires writable_quality_alphabet<typename t::quality_alphabet>;
+//     // requires sequence_container<typename t::template quality_container<typename t::quality_alphabet>>;
+// };
 //!\endcond
 
 // ----------------------------------------------------------------------------
@@ -144,22 +145,22 @@ struct sequence_file_input_default_traits_dna
     using sequence_legal_alphabet           = dna15;
 
     //!\brief The type of a DNA sequence is std::vector.
-    template <typename _sequence_alphabet>
-    using sequence_container                = std::vector<_sequence_alphabet>;
+    // template <typename _sequence_alphabet>
+    using sequence/*_container*/                = std::vector<sequence_alphabet>;
 
     //!\brief The alphabet for an identifier string is char.
     using id_alphabet                       = char;
 
     //!\brief The string type for an identifier is std::basic_string.
-    template <typename _id_alphabet>
-    using id_container                      = std::basic_string<_id_alphabet>;
+    // template <typename _id_alphabet>
+    using id/*_container*/                      = std::basic_string<id_alphabet>;
 
     //!\brief The alphabet for a quality annotation is seqan3::phred42.
     using quality_alphabet                  = phred42;
 
     //!\brief The string type for a quality annotation is std::vector.
-    template <typename _quality_alphabet>
-    using quality_container                 = std::vector<_quality_alphabet>;
+    // template <typename _quality_alphabet>
+    using quality/*_container*/                 = std::vector<phred42>;
 
     //!\}
 };
@@ -178,6 +179,8 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
 
     //!\brief The legal sequence alphabet for parsing is seqan3::aa27.
     using sequence_legal_alphabet = aa27;
+
+    using sequence/*_container*/ = std::vector<aa27>;
     //!\}
 };
 
@@ -359,18 +362,20 @@ public:
      * \{
      */
     //!\brief The type of field::seq (std::vector <seqan3::dna5> by default).
-    using sequence_type         = typename traits_type::template sequence_container<
-                                    typename traits_type::sequence_alphabet>;
+    using sequence_type         = typename traits_type::sequence/*typename traits_type::template sequence_container<
+                                    typename traits_type::sequence_alphabet>*/;
     //!\brief The type of field::id (std::string by defaul).
-    using id_type               = typename traits_type::template id_container<
-                                    typename traits_type::id_alphabet>;
+    using id_type               = typename traits_type::id/*typename traits_type::template id_container<
+                                    typename traits_type::id_alphabet>*/;
     //!\brief The type of field::qual (std::vector <seqan3::phred42> by default).
-    using quality_type          = typename traits_type::template quality_container<
-                                    typename traits_type::quality_alphabet>;
+    using quality_type          = typename traits_type::quality/*typename traits_type::template quality_container<
+                                    typename traits_type::quality_alphabet>*/;
     //!\brief The type of field::seq_qual (std::vector <seqan3::dna5q> by default).
-    using sequence_quality_type = typename traits_type::
+    using sequence_quality_type = std::vector<qualified<typename traits_type::sequence_alphabet,
+                                                        typename traits_type::quality_alphabet>>;
+                                    /*typename traits_type::
                                     template sequence_container<qualified<typename traits_type::sequence_alphabet,
-                                                                          typename traits_type::quality_alphabet>>;
+                                                                          typename traits_type::quality_alphabet>>;*/
 
     //!\brief The previously defined types aggregated in a seqan3::type_list.
     using field_types           = type_list<sequence_type, id_type, quality_type, sequence_quality_type>;
