@@ -36,6 +36,7 @@ public:
                           _id.begin());
     }
 
+    id_type & id() { return _id; }
     id_type const & id() const { return _id; }
 };
 
@@ -57,6 +58,7 @@ public:
                           _sequence.begin());
     }
 
+    sequence_type & sequence() { return _sequence; }
     sequence_type const & sequence() const { return _sequence; }
 };
 
@@ -78,6 +80,7 @@ public:
                           _quality_sequence.begin());
     }
 
+    quality_sequence_type & quality_sequence() { return _quality_sequence; }
     quality_sequence_type const & quality_sequence() const { return _quality_sequence; }
 };
 
