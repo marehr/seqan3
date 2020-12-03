@@ -24,8 +24,9 @@ using default_fields = seqan3::fields<seqan3::field::seq, seqan3::field::id, seq
 
 TEST(sequence_file_input_iterator, concepts)
 {
-    using it_t = typename seqan3::sequence_file_input<>::iterator;
-    using sen_t = typename seqan3::sequence_file_input<>::sentinel;
+    using fin_t = decltype(seqan3::sequence_file_input{"file.fasta"});
+    using it_t = fin_t::iterator;
+    using sen_t = fin_t::sentinel;
 
     EXPECT_TRUE((std::input_iterator<it_t>));
     EXPECT_TRUE((std::sentinel_for<sen_t, it_t>));
@@ -60,10 +61,10 @@ struct sequence_file_input_f : public ::testing::Test
 
 TEST_F(sequence_file_input_f, concepts)
 {
-    using t = seqan3::sequence_file_input<>;
+    using t = decltype(seqan3::sequence_file_input{"file.fasta"});
     EXPECT_TRUE((std::ranges::input_range<t>));
 
-    using ct = seqan3::sequence_file_input<> const;
+    using ct = t const;
     // not const-iterable
     EXPECT_FALSE((std::ranges::input_range<ct>));
 }
@@ -78,7 +79,7 @@ TEST_F(sequence_file_input_f, construct_by_filename)
             std::ofstream filecreator{filename.get_path(), std::ios::out | std::ios::binary};
         }
 
-        EXPECT_NO_THROW( seqan3::sequence_file_input<>{filename.get_path()} );
+        EXPECT_NO_THROW( seqan3::sequence_file_input{filename.get_path()} );
     }
 
     // correct format check is done by tests of that format
@@ -87,13 +88,13 @@ TEST_F(sequence_file_input_f, construct_by_filename)
     {
         seqan3::test::tmp_filename filename{"sequence_file_input_constructor.xyz"};
         std::ofstream filecreator{filename.get_path(), std::ios::out | std::ios::binary};
-        EXPECT_THROW( seqan3::sequence_file_input<>{filename.get_path()} ,
+        EXPECT_THROW( seqan3::sequence_file_input{filename.get_path()} ,
                       seqan3::unhandled_extension_error );
     }
 
     /* non-existent file */
     {
-        EXPECT_THROW( seqan3::sequence_file_input<>{"/dev/nonexistant/foobarOOO"},
+        EXPECT_THROW( seqan3::sequence_file_input{"/dev/nonexistant/foobarOOO"},
                       seqan3::file_open_error);
     }
 
@@ -142,7 +143,7 @@ TEST_F(sequence_file_input_f, default_template_args_and_deduction_guides)
 
     /* default template args */
     {
-        using t = seqan3::sequence_file_input<>;
+        using t = decltype(seqan3::sequence_file_input{"test.fasta"});
         EXPECT_TRUE((std::is_same_v<typename t::traits_type,        comp0>));
         EXPECT_TRUE((std::is_same_v<typename t::selected_field_ids, default_fields>));
         EXPECT_TRUE((std::is_same_v<typename t::valid_formats,      comp2>));

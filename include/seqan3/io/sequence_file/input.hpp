@@ -306,13 +306,13 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
  */
 
 template <
-    sequence_file_input_traits traits_type_ = sequence_file_input_default_traits_dna,
-    detail::fields_specialisation selected_field_ids_ = fields<field::seq, field::id, field::qual>,
-    detail::type_list_of_sequence_file_input_formats valid_formats_ = type_list<format_embl,
+    typename /*sequence_file_input_traits*/ traits_type_ /*= sequence_file_input_default_traits_dna*/,
+    detail::fields_specialisation selected_field_ids_ /*= fields<field::seq, field::id, field::qual>*/,
+    detail::type_list_of_sequence_file_input_formats valid_formats_ /*= type_list<format_embl,
                                                                                 format_fasta,
                                                                                 format_fastq,
                                                                                 format_genbank,
-                                                                                format_sam>>
+                                                                                format_sam>*/>
 class sequence_file_input
 {
 public:
@@ -676,13 +676,34 @@ protected:
  * \{
  */
 
+struct sequence_file_input_defaults
+{
+    using traits_type = sequence_file_input_default_traits_dna;
+    using selected_field_ids = fields<field::seq, field::id, field::qual>;
+    using formats = type_list<format_embl, format_fasta, format_fastq, format_genbank, format_sam>;
+};
+
 //!\brief Deduces the sequence input file type from the stream and the format.
+
+template <
+    typename /*sequence_file_input_traits*/ traits_type_ = sequence_file_input_defaults::traits_type,
+    detail::fields_specialisation selected_field_ids_ = sequence_file_input_defaults::selected_field_ids,
+    detail::type_list_of_sequence_file_input_formats valid_formats_ = sequence_file_input_defaults::formats>
+class sequence_file_input;
+
+template <typename selected_field_ids = sequence_file_input_defaults::selected_field_ids>
+sequence_file_input(std::filesystem::path filename,
+                    selected_field_ids const & = sequence_file_input_defaults::selected_field_ids{})
+    -> sequence_file_input<sequence_file_input_defaults::traits_type,         // actually use the default
+                           selected_field_ids,  // default field ids.
+                           sequence_file_input_defaults::formats>;
+
 template <input_stream stream_type,
           sequence_file_input_format file_format>
 sequence_file_input(stream_type & stream,
                     file_format const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,         // actually use the default
-                           typename sequence_file_input<>::selected_field_ids,  // default field ids.
+    -> sequence_file_input<sequence_file_input_defaults::traits_type,         // actually use the default
+                           sequence_file_input_defaults::selected_field_ids,  // default field ids.
                            type_list<file_format>>;
 
 //!\overload
@@ -690,8 +711,8 @@ template <input_stream stream_type,
           sequence_file_input_format file_format>
 sequence_file_input(stream_type && stream,
                     file_format const &)
-   -> sequence_file_input<typename sequence_file_input<>::traits_type,         // actually use the default
-                          typename sequence_file_input<>::selected_field_ids,  // default field ids.
+   -> sequence_file_input<sequence_file_input_defaults::traits_type,         // actually use the default
+                          sequence_file_input_defaults::selected_field_ids,  // default field ids.
                           type_list<file_format>>;
 
 //!\brief Deduces the sequence input file type from the stream, the format and the field ids.
@@ -701,7 +722,7 @@ template <input_stream stream_type,
 sequence_file_input(stream_type && stream,
                     file_format const &,
                     selected_field_ids const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,       // actually use the default
+    -> sequence_file_input<sequence_file_input_defaults::traits_type,       // actually use the default
                            selected_field_ids,
                            type_list<file_format>>;
 
@@ -712,7 +733,7 @@ template <input_stream stream_type,
 sequence_file_input(stream_type & stream,
                     file_format const &,
                     selected_field_ids const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,       // actually use the default
+    -> sequence_file_input<sequence_file_input_defaults::traits_type,       // actually use the default
                            selected_field_ids,
                            type_list<file_format>>;
 //!\}
