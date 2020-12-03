@@ -12,6 +12,7 @@
 #include <seqan3/std/ranges>
 #include <sstream>
 
+#include <seqan3/io/sequence_file/defaults.hpp>
 #include <seqan3/io/sequence_file/input.hpp>
 #include <seqan3/core/detail/debug_stream_alphabet.hpp>
 #include <seqan3/range/views/convert.hpp>
