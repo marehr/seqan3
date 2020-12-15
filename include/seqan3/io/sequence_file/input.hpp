@@ -181,6 +181,84 @@ struct sequence_file_input_default_traits_aa : sequence_file_input_default_trait
     //!\}
 };
 
+/*!\brief The record type of seqan3::sequence_file_input.
+ * \ingroup io
+ * \implements seqan3::tuple_like
+ * \tparam field_types The types of the fields in this record as a seqan3::type_list.
+ * \tparam field_ids   A seqan3::fields type with seqan3::field IDs corresponding to field_types.
+ */
+template <typename field_types, typename field_ids>
+class sequence_record : public record<field_types, field_ids>
+{
+    //!\brief The base class.
+    using base_t = record<field_types, field_ids>;
+
+public:
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    sequence_record() = default; //!< Defaulted.
+    sequence_record(sequence_record const &) = default; //!< Defaulted.
+    sequence_record & operator=(sequence_record const &) = default; //!< Defaulted.
+    sequence_record(sequence_record &&) = default; //!< Defaulted.
+    sequence_record & operator=(sequence_record &&) = default; //!< Defaulted.
+    ~sequence_record() = default; //!< Defaulted.
+
+    //!\brief Inherit std::tuple's and seqan3::record constructors.
+    using base_t::base_t;
+    //!\}
+
+    //!\brief The identifier, usually a string.
+    decltype(auto) id()
+    {
+        return seqan3::get<seqan3::field::id>(*this);
+    }
+
+    //!\brief The "sequence", usually a range of nucleotides or amino acids.
+    decltype(auto) sequence()
+    {
+        return seqan3::get<seqan3::field::seq>(*this);
+    }
+
+    //!\brief The qualities, usually in phred-score notation.
+    decltype(auto) qualities()
+    {
+        return seqan3::get<seqan3::field::qual>(*this);
+    }
+};
+} // namespace seqan3
+
+namespace std
+{
+
+/*!\brief Provides access to the number of elements in a tuple as a compile-time constant expression.
+ * \implements seqan3::unary_type_trait
+ * \relates seqan3::sequence_record
+ * \see std::tuple_size_v
+ */
+template <typename field_types, typename field_ids>
+struct tuple_size<seqan3::sequence_record<field_types, field_ids>>
+{
+    //!\brief The value member. Delegates to same value on base_type.
+    static constexpr size_t value = tuple_size_v<typename seqan3::sequence_record<field_types, field_ids>::base_type>;
+};
+
+/*!\brief Obtains the type of the specified element.
+ * \implements seqan3::transformation_trait
+ * \relates seqan3::sequence_record
+ * \see [std::tuple_element](https://en.cppreference.com/w/cpp/utility/tuple/tuple_element)
+ */
+template <size_t elem_no, typename field_types, typename field_ids>
+struct tuple_element<elem_no, seqan3::sequence_record<field_types, field_ids>>
+{
+    //!\brief The member type. Delegates to same type on base_type.
+    using type = std::tuple_element_t<elem_no, typename seqan3::sequence_record<field_types, field_ids>::base_type>;
+};
+
+} // namespace std
+
+namespace seqan3
+{
 // ----------------------------------------------------------------------------
 // sequence_file_input
 // ----------------------------------------------------------------------------
@@ -376,8 +454,10 @@ public:
     using field_types           = type_list<sequence_type, id_type, quality_type, sequence_quality_type>;
 
     //!\brief The type of the record, a specialisation of seqan3::record; acts as a tuple of the selected field types.
-    using record_type           = record<detail::select_types_with_ids_t<field_types, field_ids, selected_field_ids>,
-                                         selected_field_ids>;
+    using record_type           = sequence_record<detail::select_types_with_ids_t<field_types,
+                                                                                  field_ids,
+                                                                                  selected_field_ids>,
+                                                  selected_field_ids>;
     //!\}
 
     /*!\name Range associated types
