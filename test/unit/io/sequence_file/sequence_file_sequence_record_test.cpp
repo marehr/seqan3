@@ -23,7 +23,7 @@ struct record : public ::testing::Test
 {
     using types        = seqan3::type_list<std::string, seqan3::dna4_vector>;
     using types_as_ids = seqan3::fields<seqan3::field::id, seqan3::field::seq>;
-    using record_type  = seqan3::record<types, types_as_ids>;
+    using record_type  = seqan3::sequence_record<types, types_as_ids>;
 };
 
 TEST_F(record, definition_tuple_traits)
@@ -67,4 +67,54 @@ TEST_F(record, get_by_field)
 
     EXPECT_EQ(seqan3::get<seqan3::field::id>(r), "MY ID");
     EXPECT_RANGE_EQ(seqan3::get<seqan3::field::seq>(r), "ACGT"_dna4);
+}
+
+TEST_F(record, get_by_member)
+{
+    record_type r{"MY ID", "ACGT"_dna4};
+
+    EXPECT_EQ(r.id(), "MY ID");
+    EXPECT_RANGE_EQ(r.sequence(), "ACGT"_dna4);
+}
+
+TEST_F(record, get_types)
+{
+    record_type r{"MY ID", "ACGT"_dna4};
+
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::id>(r)),
+                                std::string &>));
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::seq>(r)),
+                                seqan3::dna4_vector &>));
+
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::id>(std::as_const(r))),
+                                std::string const &>));
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::seq>(std::as_const(r))),
+                                seqan3::dna4_vector const &>));
+
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::id>(std::move(r))),
+                                std::string &&>));
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::seq>(std::move(r))),
+                                seqan3::dna4_vector &&>));
+
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::id>(std::move(std::as_const(r)))),
+                                std::string const &&>));
+    static_assert((std::same_as<decltype(seqan3::get<seqan3::field::seq>(std::move(std::as_const(r)))),
+                                seqan3::dna4_vector const &&>));
+}
+
+TEST_F(record, member_types)
+{
+    record_type r{"MY ID", "ACGT"_dna4};
+
+    static_assert((std::same_as<decltype(r.id()), std::string &>));
+    static_assert((std::same_as<decltype(r.sequence()), seqan3::dna4_vector &>));
+
+    static_assert((std::same_as<decltype(std::as_const(r).id()), std::string const &>));
+    static_assert((std::same_as<decltype(std::as_const(r).sequence()), seqan3::dna4_vector const &>));
+
+    static_assert((std::same_as<decltype(std::move(r).id()), std::string &&>));
+    static_assert((std::same_as<decltype(std::move(r).sequence()), seqan3::dna4_vector &&>));
+
+    static_assert((std::same_as<decltype(std::move(std::as_const(r)).id()), std::string const &&>));
+    static_assert((std::same_as<decltype(std::move(std::as_const(r)).sequence()), seqan3::dna4_vector const &&>));
 }

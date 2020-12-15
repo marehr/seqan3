@@ -209,22 +209,22 @@ public:
     //!\}
 
     //!\brief The identifier, usually a string.
-    decltype(auto) id()
-    {
-        return seqan3::get<seqan3::field::id>(*this);
-    }
+    decltype(auto) id() && { return seqan3::get<seqan3::field::id>(std::move(*this)); }
+    decltype(auto) id() const && { return seqan3::get<seqan3::field::id>(std::move(*this)); }
+    decltype(auto) id() & { return seqan3::get<seqan3::field::id>(*this); }
+    decltype(auto) id() const & { return seqan3::get<seqan3::field::id>(*this); }
 
     //!\brief The "sequence", usually a range of nucleotides or amino acids.
-    decltype(auto) sequence()
-    {
-        return seqan3::get<seqan3::field::seq>(*this);
-    }
+    decltype(auto) sequence() && { return seqan3::get<seqan3::field::seq>(std::move(*this)); }
+    decltype(auto) sequence() const && { return seqan3::get<seqan3::field::seq>(std::move(*this)); }
+    decltype(auto) sequence() & { return seqan3::get<seqan3::field::seq>(*this); }
+    decltype(auto) sequence() const & { return seqan3::get<seqan3::field::seq>(*this); }
 
     //!\brief The qualities, usually in phred-score notation.
-    decltype(auto) qualities()
-    {
-        return seqan3::get<seqan3::field::qual>(*this);
-    }
+    decltype(auto) qualities() && { return seqan3::get<seqan3::field::qual>(std::move(*this)); }
+    decltype(auto) qualities() const && { return seqan3::get<seqan3::field::qual>(std::move(*this)); }
+    decltype(auto) qualities() & { return seqan3::get<seqan3::field::qual>(*this); }
+    decltype(auto) qualities() const & { return seqan3::get<seqan3::field::qual>(*this); }
 };
 } // namespace seqan3
 
