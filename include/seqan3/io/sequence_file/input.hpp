@@ -19,25 +19,15 @@
 #include <variant>
 #include <vector>
 
-#include <seqan3/alphabet/adaptation/char.hpp>
-#include <seqan3/alphabet/aminoacid/aa27.hpp>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <seqan3/alphabet/nucleotide/dna15.hpp>
-#include <seqan3/alphabet/quality/phred42.hpp>
-#include <seqan3/alphabet/quality/qualified.hpp>
 #include <seqan3/core/detail/pack_algorithm.hpp>
 #include <seqan3/io/stream/concept.hpp>
 #include <seqan3/io/exception.hpp>
 #include <seqan3/io/record.hpp>
 #include <seqan3/io/detail/in_file_iterator.hpp>
+#include <seqan3/io/detail/misc.hpp>
 #include <seqan3/io/detail/misc_input.hpp>
 #include <seqan3/io/detail/record.hpp>
 #include <seqan3/io/sequence_file/input_format_concept.hpp>
-#include <seqan3/io/sequence_file/format_embl.hpp>
-#include <seqan3/io/sequence_file/format_fasta.hpp>
-#include <seqan3/io/sequence_file/format_fastq.hpp>
-#include <seqan3/io/sequence_file/format_genbank.hpp>
-#include <seqan3/io/alignment_file/format_sam.hpp>
 #include <seqan3/utility/type_list/traits.hpp>
 
 namespace seqan3
@@ -97,90 +87,24 @@ namespace seqan3
  */
 //!\}
 //!\cond
-template <typename t>
-SEQAN3_CONCEPT sequence_file_input_traits = requires (t v)
-{
-    requires writable_alphabet<typename t::sequence_alphabet>;
-    requires writable_alphabet<typename t::sequence_legal_alphabet>;
-    requires explicitly_convertible_to<typename t::sequence_legal_alphabet, typename t::sequence_alphabet>;
-    requires sequence_container<typename t::template sequence_container<typename t::sequence_alphabet>>;
-
-    requires writable_alphabet<typename t::id_alphabet>;
-    requires sequence_container<typename t::template id_container<typename t::id_alphabet>>;
-
-    requires writable_quality_alphabet<typename t::quality_alphabet>;
-    requires sequence_container<typename t::template quality_container<typename t::quality_alphabet>>;
-};
+// template <typename t>
+// SEQAN3_CONCEPT sequence_file_input_traits = requires (t v)
+// {
+//     requires true;
+//     // requires writable_alphabet<typename t::sequence_alphabet>;
+//     // requires writable_alphabet<typename t::sequence_legal_alphabet>;
+//     // requires explicitly_convertible_to<typename t::sequence_legal_alphabet, typename t::sequence_alphabet>;
+//     // requires sequence_container<typename t::template sequence_container<typename t::sequence_alphabet>>;
+//     //
+//     // requires writable_alphabet<typename t::id_alphabet>;
+//     // requires sequence_container<typename t::template id_container<typename t::id_alphabet>>;
+//     //
+//     // requires writable_quality_alphabet<typename t::quality_alphabet>;
+//     // requires sequence_container<typename t::template quality_container<typename t::quality_alphabet>>;
+// };
 //!\endcond
 
 // ----------------------------------------------------------------------------
-// sequence_file_input_default_traits
-// ----------------------------------------------------------------------------
-
-/*!\brief The default traits for seqan3::sequence_file_input
- * \implements sequence_file_input_traits
- * \ingroup sequence
- *
- * \details
- *
- * If you wish to change a single or a few types from the default, just inherit from this class and
- * "overwrite" the respective type definitions.
- *
- * This example will make the file read into a smaller alphabet and a compressed container:
- *
- * \include test/snippet/io/sequence_file/sequence_file_input_trait_overwrite.cpp
- */
-struct sequence_file_input_default_traits_dna
-{
-    /*!\name Member types
-     * \brief Definitions to satisfy seqan3::sequence_file_input_traits.
-     * \{
-     */
-
-    //!\brief The sequence alphabet is seqan3::dna5.
-    using sequence_alphabet                 = dna5;
-
-    //!\brief The legal sequence alphabet for parsing is seqan3::dna15.
-    using sequence_legal_alphabet           = dna5;
-
-    //!\brief The type of a DNA sequence is std::vector.
-    template <typename _sequence_alphabet>
-    using sequence_container                = std::vector<_sequence_alphabet>;
-
-    //!\brief The alphabet for an identifier string is char.
-    using id_alphabet                       = char;
-
-    //!\brief The string type for an identifier is std::basic_string.
-    template <typename _id_alphabet>
-    using id_container                      = std::basic_string<_id_alphabet>;
-
-    //!\brief The alphabet for a quality annotation is seqan3::phred42.
-    using quality_alphabet                  = phred42;
-
-    //!\brief The string type for a quality annotation is std::vector.
-    template <typename _quality_alphabet>
-    using quality_container                 = std::vector<_quality_alphabet>;
-
-    //!\}
-};
-
-//!\brief A traits type that specifies input as amino acids.
-//!\ingroup sequence
-struct sequence_file_input_default_traits_aa : sequence_file_input_default_traits_dna
-{
-    /*!\name Member types
-     * \brief Definitions to satisfy seqan3::sequence_file_input_traits.
-     * \{
-     */
-
-    //!\brief The sequence alphabet is seqan3::aa27.
-    using sequence_alphabet = aa27;
-
-    //!\brief The legal sequence alphabet for parsing is seqan3::aa27.
-    using sequence_legal_alphabet = aa27;
-    //!\}
-};
-
 /*!\brief The record type of seqan3::sequence_file_input.
  * \ingroup io
  * \implements seqan3::tuple_like
@@ -384,13 +308,13 @@ namespace seqan3
  */
 
 template <
-    sequence_file_input_traits traits_type_ = sequence_file_input_default_traits_dna,
-    detail::fields_specialisation selected_field_ids_ = fields<field::seq, field::id, field::qual>,
-    detail::type_list_of_sequence_file_input_formats valid_formats_ = type_list<format_embl,
+    typename /*sequence_file_input_traits*/ traits_type_ /*= sequence_file_input_default_traits_dna*/,
+    detail::fields_specialisation selected_field_ids_ /*= fields<field::seq, field::id, field::qual>*/,
+    detail::type_list_of_sequence_file_input_formats valid_formats_ /*= type_list<format_embl,
                                                                                 format_fasta,
                                                                                 format_fastq,
                                                                                 format_genbank,
-                                                                                format_sam>>
+                                                                                format_sam>*/>
 class sequence_file_input
 {
 public:
@@ -437,18 +361,20 @@ public:
      * \{
      */
     //!\brief The type of field::seq (std::vector <seqan3::dna5> by default).
-    using sequence_type         = typename traits_type::template sequence_container<
-                                    typename traits_type::sequence_alphabet>;
+    using sequence_type         = typename traits_type::sequence/*typename traits_type::template sequence_container<
+                                    typename traits_type::sequence_alphabet>*/;
     //!\brief The type of field::id (std::string by defaul).
-    using id_type               = typename traits_type::template id_container<
-                                    typename traits_type::id_alphabet>;
+    using id_type               = typename traits_type::id/*typename traits_type::template id_container<
+                                    typename traits_type::id_alphabet>*/;
     //!\brief The type of field::qual (std::vector <seqan3::phred42> by default).
-    using quality_type          = typename traits_type::template quality_container<
-                                    typename traits_type::quality_alphabet>;
+    using quality_type          = typename traits_type::quality/*typename traits_type::template quality_container<
+                                    typename traits_type::quality_alphabet>*/;
     //!\brief The type of field::seq_qual (std::vector <seqan3::dna5q> by default).
-    using sequence_quality_type = typename traits_type::
+    using sequence_quality_type = std::vector<qualified<typename traits_type::sequence_alphabet,
+                                                        typename traits_type::quality_alphabet>>;
+                                    /*typename traits_type::
                                     template sequence_container<qualified<typename traits_type::sequence_alphabet,
-                                                                          typename traits_type::quality_alphabet>>;
+                                                                          typename traits_type::quality_alphabet>>;*/
 
     //!\brief The previously defined types aggregated in a seqan3::type_list.
     using field_types           = type_list<sequence_type, id_type, quality_type, sequence_quality_type>;
@@ -750,51 +676,5 @@ protected:
     //!\brief Befriend iterator so it can access the buffers.
     friend iterator;
 };
-
-/*!\name Type deduction guides
- * \relates seqan3::sequence_file_input
- * \{
- */
-
-//!\brief Deduces the sequence input file type from the stream and the format.
-template <input_stream stream_type,
-          sequence_file_input_format file_format>
-sequence_file_input(stream_type & stream,
-                    file_format const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,         // actually use the default
-                           typename sequence_file_input<>::selected_field_ids,  // default field ids.
-                           type_list<file_format>>;
-
-//!\overload
-template <input_stream stream_type,
-          sequence_file_input_format file_format>
-sequence_file_input(stream_type && stream,
-                    file_format const &)
-   -> sequence_file_input<typename sequence_file_input<>::traits_type,         // actually use the default
-                          typename sequence_file_input<>::selected_field_ids,  // default field ids.
-                          type_list<file_format>>;
-
-//!\brief Deduces the sequence input file type from the stream, the format and the field ids.
-template <input_stream stream_type,
-          sequence_file_input_format file_format,
-          detail::fields_specialisation selected_field_ids>
-sequence_file_input(stream_type && stream,
-                    file_format const &,
-                    selected_field_ids const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,       // actually use the default
-                           selected_field_ids,
-                           type_list<file_format>>;
-
-//!\overload
-template <input_stream stream_type,
-          sequence_file_input_format file_format,
-          detail::fields_specialisation selected_field_ids>
-sequence_file_input(stream_type & stream,
-                    file_format const &,
-                    selected_field_ids const &)
-    -> sequence_file_input<typename sequence_file_input<>::traits_type,       // actually use the default
-                           selected_field_ids,
-                           type_list<file_format>>;
-//!\}
 
 } // namespace seqan3

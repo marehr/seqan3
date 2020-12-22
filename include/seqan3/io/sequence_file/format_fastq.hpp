@@ -12,33 +12,37 @@
 
 #pragma once
 
-#include <seqan3/std/algorithm>
-#include <iterator>
-#include <seqan3/std/ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+// #include <seqan3/std/algorithm>
+// #include <iterator>
+// #include <seqan3/std/ranges>
+// #include <string>
+// #include <string_view>
+// #include <vector>
 
 #include <seqan3/alphabet/adaptation/char.hpp>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <seqan3/alphabet/quality/aliases.hpp>
-#include <seqan3/core/range/type_traits.hpp>
-#include <seqan3/io/detail/ignore_output_iterator.hpp>
-#include <seqan3/io/detail/misc.hpp>
-#include <seqan3/io/sequence_file/input_format_concept.hpp>
+// #include <seqan3/alphabet/nucleotide/dna5.hpp>
+// #include <seqan3/alphabet/quality/aliases.hpp>
+// #include <seqan3/core/range/type_traits.hpp>
+// #include <seqan3/io/detail/ignore_output_iterator.hpp>
+// #include <seqan3/io/detail/misc.hpp>
+// #include <seqan3/io/sequence_file/input_format_concept.hpp>
 #include <seqan3/io/sequence_file/input_options.hpp>
-#include <seqan3/io/sequence_file/output_format_concept.hpp>
+// #include <seqan3/io/sequence_file/output_format_concept.hpp>
 #include <seqan3/io/sequence_file/output_options.hpp>
 #include <seqan3/io/stream/iterator.hpp>
-#include <seqan3/range/detail/misc.hpp>
-#include <seqan3/range/views/char_to.hpp>
-#include <seqan3/range/views/istreambuf.hpp>
-#include <seqan3/range/views/to_char.hpp>
-#include <seqan3/range/views/take.hpp>
-#include <seqan3/range/views/take_exactly.hpp>
-#include <seqan3/range/views/take_line.hpp>
-#include <seqan3/range/views/take_until.hpp>
-#include <seqan3/utility/char_operations/predicate.hpp>
+// #include <seqan3/range/detail/misc.hpp>
+// #include <seqan3/range/views/char_to.hpp>
+// #include <seqan3/range/views/istreambuf.hpp>
+// #include <seqan3/range/views/to_char.hpp>
+// #include <seqan3/range/views/take.hpp>
+// #include <seqan3/range/views/take_exactly.hpp>
+// #include <seqan3/range/views/take_line.hpp>
+// #include <seqan3/range/views/take_until.hpp>
+// #include <seqan3/utility/char_operations/predicate.hpp>
+
+#include <iosfwd>
+#include <seqan3/std/iterator>
+#include <seqan3/io/exception.hpp>
 
 namespace seqan3
 {
@@ -132,8 +136,11 @@ protected:
                               id_type                                                                   & id,
                               qual_type                                                                 & qualities)
     {
-        auto stream_view = views::istreambuf(stream);
-        auto stream_it = begin(stream_view);
+        // using char_t = typename stream_type::char_type;
+        // using traits_t = typename stream_type::traits_type;
+        detail::fast_istreambuf_iterator/*<char_t, traits_t>*/ stream_it{*stream.rdbuf()};
+        // auto stream_view = views::istreambuf(stream);
+        // auto stream_it = begin(stream_view);
 
         // cache the begin position so we write quals to the same position as seq in seq_qual case
         size_t sequence_size_before = 0;
@@ -144,8 +151,8 @@ protected:
         /* ID */
         if (*stream_it != '@') // [[unlikely]]
         {
-            throw parse_error{std::string{"Expected '@' on beginning of ID line, got: "} +
-                              detail::make_printable(*stream_it)};
+            throw parse_error{std::string{"Expected '@' on beginning of ID line, got: "}/* +
+                              detail::make_printable(*stream_it)*/ + *stream_it};
         }
         ++stream_it; // skip '@'
 
@@ -153,76 +160,147 @@ protected:
         {
             if (options.truncate_ids)
             {
-                std::ranges::copy(stream_view | views::take_until_or_throw(is_cntrl || is_blank)
-                                              | views::char_to<std::ranges::range_value_t<id_type>>,
-                                  std::cpp20::back_inserter(id));
-                detail::consume(stream_view | views::take_line_or_throw);
+                for (; stream_it != std::default_sentinel; ++stream_it)
+                {
+                    if (iscntrl(*stream_it) || isblank(*stream_it)) { break; }
+                    id.push_back(assign_char_to(*stream_it, typename id_type::value_type{}));
+                }
+
+                for (; stream_it != std::default_sentinel; ++stream_it)
+                    if (*stream_it == '\n') { ++stream_it; break; }
+                // std::ranges::copy(stream_view | views::take_until_or_throw(is_cntrl || is_blank)
+                //                               | views::char_to<std::ranges::range_value_t<id_type>>,
+                //                   std::cpp20::back_inserter(id));
+                // detail::consume(stream_view | views::take_line_or_throw);
             }
             else
             {
-                std::ranges::copy(stream_view | views::take_line_or_throw
-                                              | views::char_to<std::ranges::range_value_t<id_type>>,
-                                  std::cpp20::back_inserter(id));
+                for (; stream_it != std::default_sentinel; ++stream_it)
+                {
+                    if (*stream_it == '\n') { ++stream_it; break; }
+                    id.push_back(assign_char_to(*stream_it, typename id_type::value_type{}));
+                }
+                // std::ranges::copy(stream_view | views::take_line_or_throw
+                //                               | views::char_to<std::ranges::range_value_t<id_type>>,
+                //                   std::cpp20::back_inserter(id));
             }
         }
         else
         {
-            detail::consume(stream_view | views::take_line_or_throw);
+            for (; stream_it != std::default_sentinel; ++stream_it)
+                if (*stream_it == '\n') { ++stream_it; break; }
+            // detail::consume(stream_view | views::take_line_or_throw);
         }
+
+        if (stream_it == std::default_sentinel)
+            throw unexpected_end_of_input{"bloed"};
 
         /* Sequence */
-        auto seq_view = stream_view | views::take_until_or_throw(is_char<'+'>)    // until 2nd ID line
-                                    | std::views::filter(!is_space);           // ignore whitespace
-        if constexpr (!detail::decays_to_ignore_v<seq_type>)
+        // auto seq_view = stream_view | views::take_until_or_throw(is_char<'+'>)    // until 2nd ID line
+        //                             | std::views::filter(!is_space);           // ignore whitespace
+        for (; stream_it != std::default_sentinel; ++stream_it)
         {
-            auto constexpr is_legal_alph = is_in_alphabet<seq_legal_alph_type>;
-            std::ranges::copy(seq_view | std::views::transform([is_legal_alph] (char const c) // enforce legal alphabet
-                                    {
-                                        if (!is_legal_alph(c))
-                                        {
-                                            throw parse_error{std::string{"Encountered an unexpected letter: "} +
-                                                                is_legal_alph.msg +
-                                                                " evaluated to false on " +
-                                                                detail::make_printable(c)};
-                                        }
-                                        return c;
-                                    })
-                                        | views::char_to<std::ranges::range_value_t<seq_type>>,         // convert to actual target alphabet
-                              std::cpp20::back_inserter(sequence));
-            sequence_size_after = size(sequence);
-        }
-        else // consume, but count
-        {
-            auto it = begin(seq_view);
-            auto it_end = end(seq_view);
-            while (it != it_end)
-            {
-                ++it;
-                ++sequence_size_after;
-            }
-        }
+            char chr = *stream_it;
+            if (isspace(chr)) continue;
+            if (chr == '+') { ++stream_it; break; }
 
-        detail::consume(stream_view | views::take_line_or_throw);
+            if constexpr (!detail::decays_to_ignore_v<seq_type>)
+            {
+                // auto constexpr is_legal_alph = is_in_alphabet<seq_legal_alph_type>;
+                if (!char_is_valid_for<seq_legal_alph_type>(chr))
+                {
+                    throw parse_error{std::string{"Encountered an unexpected letter: "} +
+                                        /*is_legal_alph.msg +*/
+                                        " evaluated to false on " /*+
+                                        detail::make_printable(chr)*/ + chr};
+                }
+
+                sequence.push_back(assign_char_to(chr, typename seq_type::value_type{}));
+            }
+            ++sequence_size_after;
+        }
+        sequence_size_after += sequence_size_before; // potential bug?!
+
+        if (stream_it == std::default_sentinel)
+            throw unexpected_end_of_input{"bloed"};
+
+        // if constexpr (!detail::decays_to_ignore_v<seq_type>)
+        // {
+        //     auto constexpr is_legal_alph = is_in_alphabet<seq_legal_alph_type>;
+        //     std::ranges::copy(seq_view | std::views::transform([is_legal_alph] (char const c) // enforce legal alphabet
+        //                             {
+        //                                 if (!is_legal_alph(c))
+        //                                 {
+        //                                     throw parse_error{std::string{"Encountered an unexpected letter: "} +
+        //                                                         is_legal_alph.msg +
+        //                                                         " evaluated to false on " +
+        //                                                         detail::make_printable(c)};
+        //                                 }
+        //                                 return c;
+        //                             })
+        //                                 | views::char_to<std::ranges::range_value_t<seq_type>>,         // convert to actual target alphabet
+        //                       std::cpp20::back_inserter(sequence));
+        //     sequence_size_after = size(sequence);
+        // }
+        // else // consume, but count
+        // {
+        //     auto it = begin(seq_view);
+        //     auto it_end = end(seq_view);
+        //     while (it != it_end)
+        //     {
+        //         ++it;
+        //         ++sequence_size_after;
+        //     }
+        // }
+
+        for (; stream_it != std::default_sentinel; ++stream_it)
+            if (*stream_it == '\n') { ++stream_it; break; }
+        // detail::consume(stream_view | views::take_line_or_throw);
 
         /* Qualities */
-        auto qview = stream_view | std::views::filter(!is_space)                  // this consumes trailing newline
-                                 | views::take_exactly_or_throw(sequence_size_after - sequence_size_before);
-        if constexpr (seq_qual_combined)
+        // auto qview = stream_view | std::views::filter(!is_space)                  // this consumes trailing newline
+        //                          | views::take_exactly_or_throw(sequence_size_after - sequence_size_before);
+        for (int i = 0, size = sequence_size_after - sequence_size_before; i < size && stream_it != std::default_sentinel; ++stream_it)
         {
-            // seq_qual field implies that they are the same variable
-            assert(std::addressof(sequence) == std::addressof(qualities));
-            std::ranges::copy(qview | views::char_to<typename std::ranges::range_value_t<qual_type>::quality_alphabet_type>,
-                              begin(qualities) + sequence_size_before);
+            if (isspace(*stream_it)) continue;
+
+            if constexpr (seq_qual_combined)
+            {
+                assert(std::addressof(sequence) == std::addressof(qualities));
+                using qual_value_t = typename qual_type::value_type::quality_alphabet_type;
+
+                auto & sequence_chr = qualities[sequence_size_before + i];
+                sequence_chr = assign_char_to(*stream_it, qual_value_t{});
+            }
+            else if constexpr (!detail::decays_to_ignore_v<qual_type>)
+                qualities.push_back(assign_char_to(*stream_it, typename qual_type::value_type{}));
+
+            ++i;
         }
-        else if constexpr (!detail::decays_to_ignore_v<qual_type>)
-        {
-            std::ranges::copy(qview | views::char_to<std::ranges::range_value_t<qual_type>>,
-                              std::cpp20::back_inserter(qualities));
-        }
-        else
-        {
-            detail::consume(qview);
-        }
+
+        if (stream_it == std::default_sentinel)
+            return;
+
+        if (*stream_it != '\n')
+            throw parse_error{"Expect EOF or newline"};
+
+        ++stream_it;
+        // if constexpr (seq_qual_combined)
+        // {
+        //     // // // seq_qual field implies that they are the same variable
+        //     // assert(std::addressof(sequence) == std::addressof(qualities));
+        //     // // std::ranges::copy(qview | views::char_to<typename std::ranges::range_value_t<qual_type>::quality_alphabet_type>,
+        //     // //                   begin(qualities) + sequence_size_before);
+        // }
+        // else if constexpr (!detail::decays_to_ignore_v<qual_type>)
+        // {
+        //     // std::ranges::copy(qview | views::char_to<std::ranges::range_value_t<qual_type>>,
+        //     //                   std::cpp20::back_inserter(qualities));
+        // }
+        // else
+        // {
+        //     // detail::consume(qview);
+        // }
     }
 
     //!\copydoc sequence_file_output_format::write_sequence_record
@@ -263,7 +341,7 @@ protected:
             if (std::ranges::empty(sequence)) //[[unlikely]]
                 throw std::runtime_error{"The SEQ field may not be empty when writing FASTQ files."};
 
-            stream_it.write_range(sequence | views::to_char);
+            stream_it.write_sequence(sequence/* | views::to_char*/);
             stream_it.write_end_of_line(options.add_carriage_return);
         }
 
@@ -293,7 +371,7 @@ protected:
                 assert(std::ranges::size(sequence) == std::ranges::size(qualities));
             }
 
-            stream_it.write_range(qualities | views::to_char);
+            stream_it.write_sequence(qualities /*| views::to_char*/);
             stream_it.write_end_of_line(options.add_carriage_return);
         }
     }

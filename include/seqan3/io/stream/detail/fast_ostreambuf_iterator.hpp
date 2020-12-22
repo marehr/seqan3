@@ -17,6 +17,7 @@
 #include <seqan3/std/charconv>
 #include <seqan3/std/iterator>
 #include <seqan3/std/ranges>
+#include <seqan3/std/span>
 
 #include <seqan3/io/stream/detail/stream_buffer_exposer.hpp>
 
@@ -138,60 +139,72 @@ public:
      *
      * \include test/snippet/io/detail/iterator_write_range.cpp
      */
-    template <std::ranges::forward_range range_type>
-    //!\cond
-        requires std::ranges::borrowed_range<range_type>
-    //!\endcond
-    auto write_range(range_type && rng)
-    {
-        using sen_t = std::ranges::sentinel_t<range_type>;
-        using it_t = std::ranges::iterator_t<range_type>;
-
-        it_t it = std::ranges::begin(rng);
-        sen_t end = std::ranges::end(rng);
-
-        while (it != end)
-        {
-            size_t const buffer_space = stream_buf->epptr() - stream_buf->pptr();
-
-            if constexpr (std::ranges::sized_range<range_type>)
-            {
-                size_t const characters_to_write = std::min<size_t>(std::ranges::distance(it, end), buffer_space);
-                auto copy_res = std::ranges::copy_n(it, characters_to_write, stream_buf->pptr());
-                it = copy_res.in;
-                stream_buf->pbump(characters_to_write);
-            }
-            else
-            {
-                size_t i = 0;
-                for (; it != end && i < buffer_space; ++it, ++i)
-                    *stream_buf->pptr() = *it;
-                stream_buf->pbump(i);
-            }
-
-            if (it == end) // no more characters to write
-                return it;
-
-            // Push one more character and flush
-            if (stream_buf->overflow(*it) == traits_t::eof())
-            {
-                // LCOV_EXCL_START
-                throw std::ios_base::failure{"Cannot write to output stream (reached traits::eof() condition)."};
-                // LCOV_EXCL_STOP
-            }
-
-            ++it; // drop 1 character that has been written in overflow()
-        }
-
-        return it;
-    }
+    // template <std::ranges::forward_range range_type>
+    // //!\cond
+    //     requires std::ranges::borrowed_range<range_type>
+    // //!\endcond
+    // auto write_range(range_type && rng)
+    // {
+    //     using sen_t = std::ranges::sentinel_t<range_type>;
+    //     using it_t = std::ranges::iterator_t<range_type>;
+    //
+    //     it_t it = std::ranges::begin(rng);
+    //     sen_t end = std::ranges::end(rng);
+    //
+    //     while (it != end)
+    //     {
+    //         size_t const buffer_space = stream_buf->epptr() - stream_buf->pptr();
+    //
+    //         if constexpr (std::ranges::sized_range<range_type>)
+    //         {
+    //             size_t const characters_to_write = std::min<size_t>(std::ranges::distance(it, end), buffer_space);
+    //             auto copy_res = std::ranges::copy_n(it, characters_to_write, stream_buf->pptr());
+    //             it = copy_res.in;
+    //             stream_buf->pbump(characters_to_write);
+    //         }
+    //         else
+    //         {
+    //             size_t i = 0;
+    //             for (; it != end && i < buffer_space; ++it, ++i)
+    //                 *stream_buf->pptr() = *it;
+    //             stream_buf->pbump(i);
+    //         }
+    //
+    //         if (it == end) // no more characters to write
+    //             return it;
+    //
+    //         // Push one more character and flush
+    //         if (stream_buf->overflow(*it) == traits_t::eof())
+    //         {
+    //             // LCOV_EXCL_START
+    //             throw std::ios_base::failure{"Cannot write to output stream (reached traits::eof() condition)."};
+    //             // LCOV_EXCL_STOP
+    //         }
+    //
+    //         ++it; // drop 1 character that has been written in overflow()
+    //     }
+    //
+    //     return it;
+    // }
 
     //!\cond
     // overload for non-std::ranges::borrowed_range types that return void
-    template <std::ranges::forward_range range_type>
-    void write_range(range_type && rng)
+    template <typename /*std::ranges::forward_range */ range_type>
+    auto write_range(range_type && rng)
     {
-        write_range(rng); // lvalue is always a safe range. return value is ignored because iterator would be dangling
+        auto it = std::ranges::begin(rng);
+        for (auto sentinel = std::ranges::end(rng); it != sentinel; ++it)
+            stream_buf->sputc(*it);
+
+        return it;
+        // write_range(rng); // lvalue is always a safe range. return value is ignored because iterator would be dangling
+    }
+
+    template <typename /*std::ranges::forward_range */ range_type>
+    void write_sequence(range_type && rng)
+    {
+        for (/*alphabet*/ auto && chr : rng)
+            stream_buf->sputc(to_char(chr));
     }
     //!\endcond
 
@@ -214,7 +227,7 @@ public:
         {
             std::array<char, 300> arithmetic_buffer{};
             auto res = std::to_chars(&arithmetic_buffer[0], &arithmetic_buffer[0] + sizeof(arithmetic_buffer), num);
-            write_range(std::ranges::subrange<char *, char *>(&arithmetic_buffer[0], res.ptr));
+            write_range(std::span<char>(&arithmetic_buffer[0], res.ptr));
         }
     }
 

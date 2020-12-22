@@ -111,7 +111,7 @@ namespace seqan3
 //!\}
 //!\cond
 template <typename t>
-SEQAN3_CONCEPT alignment_file_input_traits = requires (t v)
+SEQAN3_CONCEPT alignment_file_input_traits = true /*requires (t v)
 {
     // field::seq
     requires writable_alphabet<typename t::sequence_alphabet>;
@@ -157,7 +157,7 @@ SEQAN3_CONCEPT alignment_file_input_traits = requires (t v)
     // Type of tuple entry 2 (query) is set to
     // 1) a std::ranges::subrange over std::ranges::range_value_t<typename t::ref_sequences> if reference information was given
     // or 2) a "dummy" sequence type:
-};
+}*/;
 //!\endcond
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -194,19 +194,19 @@ struct alignment_file_input_default_traits
     using sequence_legal_alphabet               = dna15;
 
     //!\brief The container for a sequence is std::vector.
-    template <typename _sequence_alphabet>
-    using sequence_container                    = std::vector<_sequence_alphabet>;
+    // template <typename _sequence_alphabet>
+    using sequence = std::vector<dna5>/*_container                    = std::vector<_sequence_alphabet>*/;
 
     //!\brief The string type for an identifier is std::basic_string.
-    template <typename _id_alphabet>
-    using id_container                          = std::basic_string<_id_alphabet>;
+    // template <typename _id_alphabet>
+    using id = std::basic_string<char>/*_container                          = std::basic_string<_id_alphabet>*/;
 
     //!\brief The alphabet for a quality annotation is seqan3::phred42.
     using quality_alphabet                      = phred42;
 
     //!\brief The string type for a quality annotation is std::vector.
-    template <typename _quality_alphabet>
-    using quality_container                     = std::vector<_quality_alphabet>;
+    // template <typename _quality_alphabet>
+    using quality = std::vector<phred42>;/*_container                     = std::vector<_quality_alphabet>;*/
 
     //!\brief The type of the reference sequences is deduced on construction.
     using ref_sequences                         = ref_sequences_t;
@@ -387,10 +387,10 @@ public:
      * \{
      */
     //!\brief The type of field::seq (default std::vector<seqan3::dna5>).
-    using sequence_type            = typename traits_type::template sequence_container<
-                                         typename traits_type::sequence_alphabet>;
+    using sequence_type            = typename traits_type::sequence/*template sequence_container<
+                                         typename traits_type::sequence_alphabet>*/;
     //!\brief The type of field::id (default std::string by default).
-    using id_type                  = typename traits_type::template id_container<char>;
+    using id_type                  = typename traits_type::id/*template id_container<char>*/;
     //!\brief The type of field::offset is fixed to int32_t.
     using offset_type              = int32_t;
     /*!\brief The type of field::ref_seq (default depends on construction).
@@ -420,8 +420,8 @@ public:
     //!\brief The type of field::mapq is fixed to uint8_t.
     using mapq_type                = uint8_t;
     //!\brief The type of field::qual (default std::vector<seqan3::phred42>).
-    using quality_type             = typename traits_type::template quality_container<
-                                         typename traits_type::quality_alphabet>;
+    using quality_type             = typename traits_type::quality/*template quality_container<
+                                         typename traits_type::quality_alphabet>*/;
     //!\brief The type of field::flag is fixed to seqan3::sam_flag.
     using flag_type                = sam_flag;
     //!\brief The type of field::cigar is fixed to std::vector<cigar>.
@@ -441,7 +441,7 @@ private:
                                      selected_field_ids::contains(field::seq),
                                      gap_decorator<
                                          decltype(std::declval<sequence_type &>() | views::slice(0, 0))>,
-                                     typename traits_type::template sequence_container<
+                                     std::vector/*typename traits_type::template sequence_container*/<
                                          gapped<typename traits_type::sequence_alphabet>>>;
 
 public:

@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 
+#include <seqan3/io/sequence_file/defaults.hpp>
 #include <seqan3/io/sequence_file/output.hpp>
 #include <seqan3/io/sequence_file/input.hpp>
 #include <seqan3/range/views/persist.hpp>

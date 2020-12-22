@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 
 #include <seqan3/alphabet/nucleotide/dna15.hpp>
+#include <seqan3/io/sequence_file/defaults.hpp>
 #include <seqan3/test/pretty_printing.hpp>
 
 #include "sequence_file_format_test_template.hpp"
