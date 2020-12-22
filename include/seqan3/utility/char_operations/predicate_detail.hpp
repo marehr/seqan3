@@ -52,6 +52,16 @@ public:
 
         return rhs;
     }
+
+    //!\brief Return a new bitset that is a logical conjunction of the two given ones.
+    constexpr constexpr_pseudo_bitset operator&(constexpr_pseudo_bitset rhs) const noexcept
+    {
+        for (size_t i = 0; i < N; ++i)
+            rhs[i] = rhs[i] && base_t::operator[](i);
+
+        return rhs;
+    }
+
     //!\brief Return a new bitset with all bits flipped.
     constexpr constexpr_pseudo_bitset operator~() const noexcept
     {
@@ -147,6 +157,10 @@ template <char_predicate... condition_ts>
     requires (sizeof...(condition_ts) >= 2)
 struct char_predicate_disjunction;
 
+template <char_predicate... condition_ts>
+    requires (sizeof...(condition_ts) >= 2)
+struct char_predicate_conjunction;
+
 template <char_predicate condition_t>
 struct char_predicate_negator;
 //!\endcond
@@ -172,6 +186,12 @@ struct char_predicate_base
     constexpr auto operator||(rhs_t const &) const
     {
         return char_predicate_disjunction<derived_t, rhs_t>{};
+    }
+
+    template <char_predicate rhs_t>
+    constexpr auto operator&&(rhs_t const &) const
+    {
+        return char_predicate_conjunction<derived_t, rhs_t>{};
     }
 
     //!\brief Return a new condition with all bits flipped.
@@ -245,6 +265,25 @@ struct char_predicate_disjunction : public char_predicate_base<char_predicate_di
     //!\brief The look-up table that is used to evaluate the input.
     static constexpr data_t data = (condition_ts::data | ...);
 };
+
+template <char_predicate... condition_ts>
+//!\cond
+    requires (sizeof...(condition_ts) >= 2)
+//!\endcond
+struct char_predicate_conjunction : public char_predicate_base<char_predicate_conjunction<condition_ts...>>
+{
+    //!\brief The message representing the disjunction of the associated conditions.
+    inline static const std::string msg = detail::condition_message_v<'&', condition_ts...>;
+
+    //!\brief The base type.
+    using base_t = char_predicate_base<char_predicate_conjunction<condition_ts...>>;
+
+    //!\brief Import the data type from the base class.
+    using typename base_t::data_t;
+    //!\brief The look-up table that is used to evaluate the input.
+    static constexpr data_t data = (condition_ts::data & ...);
+};
+
 
 /*!\brief Logical not operator for a parse condition.
  * \implements seqan3::detail::char_predicate
