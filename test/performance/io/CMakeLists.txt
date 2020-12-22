@@ -4,6 +4,7 @@ target_sources(format_fasta_benchmark PRIVATE format_fasta_benchmark.seqan3_read
 target_sources(format_fasta_benchmark PRIVATE format_fasta_benchmark.seqan3_write.cpp)
 target_sources(format_fasta_benchmark PRIVATE format_fasta_benchmark.seqan2_read.cpp)
 target_sources(format_fasta_benchmark PRIVATE format_fasta_benchmark.seqan2_write.cpp)
+# target_sources(format_fasta_benchmark PRIVATE format_fasta_benchmark.seqan3_nio_read.cpp)
 seqan3_benchmark(format_fastq_benchmark.cpp)
 seqan3_benchmark(format_sam_benchmark.cpp)
 seqan3_benchmark(format_vienna_benchmark.cpp)

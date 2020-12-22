@@ -65,7 +65,8 @@ public:
         stream_buf{reinterpret_cast<stream_buffer_exposer<char_t, traits_t> *>(&ibuf)}
     {
         assert(stream_buf != nullptr);
-        stream_buf->underflow(); // ensure the stream buffer has content on construction
+        if (stream_buf->gptr() == stream_buf->egptr())
+            stream_buf->underflow(); // ensure the stream buffer has content on construction
     }
     //!\}
 
