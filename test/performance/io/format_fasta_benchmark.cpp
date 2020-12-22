@@ -96,6 +96,34 @@ void seqan2_dna5_ostringstream_write(benchmark::State & state)
 BENCHMARK(seqan2_dna5_ostringstream_write);
 #endif
 
+struct char_traits : public seqan3::sequence_file_input_default_traits_dna
+{
+    using sequence_alphabet = char;
+    using sequence_legal_alphabet = char;
+};
+
+void seqan3_char_istringstream_read(benchmark::State & state)
+{
+    std::istringstream istream{fasta_file};
+    seqan3::sequence_file_input<char_traits> fin{istream, seqan3::format_fasta{}};
+
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+
+        auto it = fin.begin();
+        for (size_t i = 0; i < iterations_per_run; ++i)
+            it++;
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+BENCHMARK(seqan3_char_istringstream_read);
+
 void seqan3_dna5_istringstream_read(benchmark::State & state)
 {
     std::istringstream istream{fasta_file};
@@ -121,6 +149,34 @@ BENCHMARK(seqan3_dna5_istringstream_read);
 #if __has_include(<seqan/seq_io.h>)
 
 #include <fstream>
+
+void seqan2_char_istringstream_read(benchmark::State & state)
+{
+    seqan::CharString id;
+    seqan::CharString seq;
+
+    std::istringstream istream{fasta_file};
+
+    for (auto _ : state)
+    {
+        istream.clear();
+        istream.seekg(0, std::ios::beg);
+        auto it = seqan::Iter<std::istringstream, seqan::StreamIterator<seqan::Input> >(istream);
+
+        for (size_t i = 0; i < iterations_per_run; ++i)
+        {
+            readRecord(id, seq, it, seqan::Fasta{});
+            clear(id);
+            clear(seq);
+        }
+    }
+
+    size_t bytes_per_run = fasta_file.size();
+    state.counters["iterations_per_run"] = iterations_per_run;
+    state.counters["bytes_per_run"] = bytes_per_run;
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(bytes_per_run);
+}
+BENCHMARK(seqan2_char_istringstream_read);
 
 void seqan2_dna5_istringstream_read(benchmark::State & state)
 {
