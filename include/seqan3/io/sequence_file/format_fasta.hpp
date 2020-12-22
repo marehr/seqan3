@@ -102,7 +102,31 @@ public:
         { "fas"   },
     };
 
+    struct fasta_record
+    {
+        std::vector<char> id_field;
+        std::vector<char> seq_field;
+    };
+
+    static std::vector<std::string> & extensions()
+    {
+        return file_extensions;
+    }
+
+    fasta_record & read_record(std::istream & in_stream)
+    {
+        read_sequence_record(in_stream,
+                             sequence_file_input_options<char, false>{},
+                             record.seq_field,
+                             record.id_field,
+                             std::ignore);
+        return record;
+    }
+
 protected:
+
+    fasta_record record{};
+
     //!\copydoc sequence_file_input_format::read_sequence_record
     template <typename stream_type,     // constraints checked by file
               typename legal_alph_type, bool seq_qual_combined,
