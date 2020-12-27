@@ -342,7 +342,7 @@ public:
     inline subspan(index_type offset, index_type count = dynamic_extent) const noexcept
     {
         assert(offset >= 0 && offset <= size());
-        assert(count  >= 0 && count  <= size());
+        assert(count  >= 0 && (count == dynamic_extent || count  <= size()));
         if (count == dynamic_extent)
             return {data() + offset, size() - offset};
         assert(offset + count <= size());
