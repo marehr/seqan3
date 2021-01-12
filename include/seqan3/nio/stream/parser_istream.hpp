@@ -100,6 +100,7 @@ struct parser_istream
                 return;
 
             capture_start(subrange);
+            // take_until predicate == true || ignore == true
             _advance_while<true>(predicate, ignore);
             capture_end();
         }
